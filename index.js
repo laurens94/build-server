@@ -35,9 +35,9 @@ app.post('/github', function (req, res) {
                 var folderName = req.body.repository.name
                 console.log('Starting with: ' + folderName)
 
-                if (!fs.existsSync(folderName)){
+                if (!fs.existsSync('sites/' + folderName)){
                     console.log('Git clone: ' + folderName)
-                    shell.exec('git clone git@github.com:' + req.body.repository.full_name + '.git');
+                    shell.exec('cd sites; git clone git@github.com:' + req.body.repository.full_name + '.git');
                 }
 
                 console.log('npm install')
