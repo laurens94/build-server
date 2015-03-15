@@ -1,0 +1,17 @@
+{
+  "name": "git-hook-fonkel",
+  "description": "",
+  "version": "0.1.1",
+  "author": {
+    "name": "Daniel Beeke",
+    "email": "daniel@studiofonkel.nl",
+    "url": "http://studiofonkel.nl"
+  },
+  "dependencies": {
+    "body-parser": "*",
+    "debug": "*",
+    "express": "*",
+    "git-hook": "*",
+    "shelljs": "^0.3.0"
+  }
+}
