@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "body-parser": "*",
+    "colors": "^1.0.3",
     "debug": "*",
     "express": "*",
     "git-hook": "*",
