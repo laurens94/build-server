@@ -1,7 +1,9 @@
 'use strict';
 
-/* WEBHOOK ADDRESS: http://128.199.56.106:3000/github */
+// Change IP address before using this script
+var ipAddress = '192.30.252.41';
 
+// Requirements
 var express = require('express'),
   debug = require('debug')('api'),
   bodyParser = require('body-parser'),
@@ -30,7 +32,7 @@ app.post('/github', function (req, res) {
   debug('github event');
 
   gh.handleEvent('github', {
-    ip: '192.30.252.41',
+    ip: ipAddress,
     headers: req.headers,
     body: req.body
   }, function (err) {
@@ -46,16 +48,23 @@ app.post('/github', function (req, res) {
         console.log(colors.yellow('Starting with: %s\n'), folderName);
 
         // git clone if this is the first time
-        if (!fs.existsSync(sitesFolder + folderName)){
-          console.log('git clone git@github.com: ' + req.body.repository.full_name + '.git');
-          shell.exec('cd '+ sitesFolder + '; git clone git@github.com:' + req.body.repository.full_name + '.git');
-          console.log(colors.green('Done cloning %s\n'), folderName);
+        if (!fs.existsSync(sitesFolder + folderName)) {
+            // make sites folder if there wasn't one yet
+            if (!fs.existsSync(sitesFolder)){
+              shell.exec('mkdir ' + sitesFolder);
+            }
+
+            console.log('git clone git@github.com: ' + req.body.repository.full_name + '.git');
+            shell.exec('cd '+ sitesFolder + '; git clone git@github.com:' + req.body.repository.full_name + '.git');
+            console.log(colors.green('Done cloning %s\n'), folderName);
         }
 
         // git pull origin master
-        console.log('git pull origin master');
-        shell.exec('cd '+ sitesFolder + folderName + '; git pull origin master');
-        console.log(colors.green('Done pulling the latest changes from GitHub.\n'));
+        else {
+          console.log('git pull origin master');
+          shell.exec('cd '+ sitesFolder + folderName + '; git pull origin master');
+          console.log(colors.green('Done pulling the latest changes from GitHub.\n'));
+        }
 
         var checks = {
           "node": {
@@ -86,12 +95,14 @@ app.post('/github', function (req, res) {
             console.log(colors.yellow('%s'), obj.command);
             shell.exec('cd '+ sitesFolder + folderName + '; ' + obj.command);
             console.log(colors.green('%s\n'), obj.successMessage);
-          } else {
+          }
+
+          else {
             console.log(colors.blue('no %s found\n'), obj.filename);
           }
         }
 
-        console.log(colors.green('All done.\n\n'));
+        console.log(colors.green('All done.\n\n\n'));
         console.log(colors.yellow('Waiting for incoming GitHub events...\n'));
       }
     }
