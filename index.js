@@ -49,14 +49,14 @@ app.post('/github', function (req, res) {
 
         // git clone if this is the first time
         if (!fs.existsSync(sitesFolder + folderName)) {
-            // make sites folder if there wasn't one yet
-            if (!fs.existsSync(sitesFolder)){
-              shell.exec('mkdir ' + sitesFolder);
-            }
+          // make sites folder if there wasn't one yet
+          if (!fs.existsSync(sitesFolder)){
+            shell.exec('mkdir ' + sitesFolder);
+          }
 
-            console.log('git clone git@github.com: ' + req.body.repository.full_name + '.git');
-            shell.exec('cd '+ sitesFolder + '; git clone git@github.com:' + req.body.repository.full_name + '.git');
-            console.log(colors.green('Done cloning %s\n'), folderName);
+          console.log('git clone git@github.com: ' + req.body.repository.full_name + '.git');
+          shell.exec('cd '+ sitesFolder + '; git clone git@github.com:' + req.body.repository.full_name + '.git');
+          console.log(colors.green('Done cloning %s\n'), folderName);
         }
 
         // git pull origin master
@@ -68,7 +68,7 @@ app.post('/github', function (req, res) {
 
         var checks = {
           "node": {
-            "filename": "packages.json",
+            "filename": "package.json",
             "command": "npm install",
             "successMessage": "Done installing packages."
           },
@@ -90,10 +90,10 @@ app.post('/github', function (req, res) {
           var obj = checks[key];
           console.log(colors.yellow('Trying to locate %s...'), obj.filename);
 
-          if (fs.existsSync(sitesFolder + folderName + '/' + obj.filename)) {
+          if (fs.existsSync(sitesFolder + '/' + folderName + '/' + obj.filename)) {
             console.log(colors.green('%s found'), obj.filename);
             console.log(colors.yellow('%s'), obj.command);
-            shell.exec('cd '+ sitesFolder + folderName + '; ' + obj.command);
+            shell.exec('cd '+ sitesFolder + '/' + folderName + '; ' + obj.command);
             console.log(colors.green('%s\n'), obj.successMessage);
           }
 
