@@ -74,7 +74,7 @@ app.post('/github', function (req, res) {
           },
 
           "bundler": {
-            "filename": "GEMFILE",
+            "filename": "Gemfile",
             "command": "bundle install",
             "successMessage": "Done installing gems."
           },
@@ -102,6 +102,15 @@ app.post('/github', function (req, res) {
           }
         }
 
+        if (fs.existsSync(sitesFolder + '/' + folderName + '/vhost')) {
+          shell.exec('rm -f /etc/nginx/sites-enabled/' + folderName);
+          shell.exec('cp ' + sitesFolder + '/' + folderName + '/vhost /etc/nginx/sites-enabled/' + folderName);
+          console.log(colors.green('Replacing old vhost\n'));
+          shell.exec('service nginx reload');
+          shell.exec('service nginx-pagespeed reload');
+
+          console.log(colors.green('Reloading nginx\n'));
+        }
         console.log(colors.green('All done.\n\n\n'));
         console.log(colors.yellow('Waiting for incoming GitHub events...\n'));
       }
