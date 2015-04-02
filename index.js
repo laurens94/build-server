@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
 
 app.get('/', function (req, res) {
-  res.status(200).send('hee niet spieken droplul');
+  res.status(200).send('Yo world');
 });
 
 app.post('/github', function (req, res) {
@@ -25,15 +25,15 @@ app.post('/github', function (req, res) {
     res.status(200).send('Building your shizzle.');
     res.end();
 
-    var sitesFolder = 'sites/';
+    var sitesFolder = '/var/www/jekyll-build/sites';
     var folderName = req.body.repository.name;
     console.log(colors.yellow('Starting with: %s\n'), folderName);
 
     // git clone if this is the first time
-    if (!fs.existsSync(sitesFolder + folderName)) {
+    if (!fs.existsSync(sitesFolder + '/' + folderName)) {
       // make sites folder if there wasn't one yet
       if (!fs.existsSync(sitesFolder)){
-        shell.exec('mkdir ' + sitesFolder);
+        shell.exec('cd '+ sitesFolder + '; mkdir ' + sitesFolder);
       }
 
       console.log('git clone git@github.com: ' + req.body.repository.full_name + '.git');
@@ -44,7 +44,7 @@ app.post('/github', function (req, res) {
     // git pull origin master
     else {
       console.log('git pull origin master');
-      shell.exec('cd '+ sitesFolder + folderName + '; git pull origin master');
+      shell.exec('cd '+ sitesFolder + '/' + folderName + '; git pull origin master');
       console.log(colors.green('Done pulling the latest changes from GitHub.\n'));
     }
 
@@ -69,7 +69,7 @@ app.post('/github', function (req, res) {
 
       "grunt": {
         "filename": "Gruntfile.js",
-        "command": "grunt deploy",
+        "command": "grunt build",
         "successMessage": "Succesfully deployed project."
       }
     };
@@ -88,6 +88,11 @@ app.post('/github', function (req, res) {
       else {
         console.log(colors.blue('no %s found\n'), obj.filename);
       }
+    }
+
+    if (fs.existsSync(sitesFolder + '/' + folderName + '/dist')) {
+      shell.exec('rm -rf /var/www/' + folderName);
+      shell.exec('cp -R ' + sitesFolder + '/' + folderName + '/dist/ /var/www/' + folderName);
     }
 
     if (fs.existsSync(sitesFolder + '/' + folderName + '/vhost')) {
