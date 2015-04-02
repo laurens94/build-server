@@ -32,7 +32,7 @@ app.post('/github', function (req, res) {
   debug('github event');
 
   gh.handleEvent('github', {
-    ip: ipAddress,
+    // ip: ipAddress,
     headers: req.headers,
     body: req.body
   }, function (err) {
@@ -77,6 +77,12 @@ app.post('/github', function (req, res) {
             "filename": "Gemfile",
             "command": "bundle install",
             "successMessage": "Done installing gems."
+          },
+
+          "bower": {
+            "filename": "bower.json",
+            "command": "bower install --allow-root",
+            "successMessage": "Done installing bower dependencies."
           },
 
           "grunt": {
