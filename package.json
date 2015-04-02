@@ -11,8 +11,7 @@
     "body-parser": "*",
     "colors": "^1.0.3",
     "debug": "*",
-    "express": "*",
-    "git-hook": "*",
+    "express": "~4.0.0",
     "shelljs": "^0.3.0"
   }
 }
