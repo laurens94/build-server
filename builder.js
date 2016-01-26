@@ -43,7 +43,9 @@ var builder = {
                     logger.log('Check ' + check.name + ' was successful', 'yellow');
 
                     var exec = require('child_process').exec;
-                    exec(check.command, function(error, stdout, stderr) {
+                    exec(check.command, {
+                        cwd: __dirname + '/builds/' + commit.repo_name
+                    }, function(error, stdout, stderr) {
 
                         console.log('stdout: ' + stdout);
                         console.log('stderr: ' + stderr);
