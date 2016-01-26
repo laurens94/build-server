@@ -1,6 +1,8 @@
 var fs = require('fs'),
   mkdirp = require('mkdirp'),
   logger = require('./logger'),
+  async = require('async'),
+  exec = require('child_process').exec,
   Git = require("nodegit");
 
 var builder = {
@@ -38,27 +40,37 @@ var builder = {
         },
 
         runChecks: function (commit) {
+            var checkFunctions = [];
+
             builder.checks.forEach(function (check) {
                 if (fs.existsSync(__dirname + '/builds/' + commit.repo_name + '/' + check.filename)) {
                     logger.log('Check ' + check.name + ' was successful', 'yellow');
 
-                    var exec = require('child_process').exec;
-                    exec(check.command, {
-                        cwd: __dirname + '/builds/' + commit.repo_name
-                    }, function(error, stdout, stderr) {
+                    checkFunctions.push(function (callback) {
+                        exec(check.command, {
+                            cwd: __dirname + '/builds/' + commit.repo_name
+                        }, function(error, stdout, stderr) {
 
-                        console.log('stdout: ' + stdout);
-                        console.log('stderr: ' + stderr);
+                            console.log('stdout: ' + stdout);
+                            console.log('stderr: ' + stderr);
 
-                        if (error !== null) {
-                            console.log('exec error: ' + error);
-                        }
-                    });
+                            if (error !== null) {
+                                console.log('exec error: ' + error);
+                            }
+
+                            console.log(check)
+                            callback()
+                        });
+                    })
                 }
                 else {
                     logger.log('Check ' + check.name + ' was not successful', 'yellow');
                 }
-            })
+            });
+
+            async.waterfall(checkFunctions, function (err, result) {
+                console.log(result)
+            });
         }
     },
 
