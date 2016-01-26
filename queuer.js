@@ -6,14 +6,13 @@ var queue = [],
   running = false;
 
 var queuer = {
+
     // This get's triggered by an push event.
     add: function (commit) {
         queue.push(commit);
         queuer.deduplicate();
 
-        logMessage = 'Added ' + commit.name + ': "' + commit.message + '" to the queue.';
-        logger.log(logMessage, 'yellow');
-
+        logger.log('Added ' + commit.repo_name + ': "' + commit.message + '" to the queue.', 'yellow');
 
         if (!running) {
             queuer.next()
@@ -41,9 +40,8 @@ var queuer = {
     },
 
     next: function () {
-        nextCommit = queue[0];
-        delete queue[0];
-        builder.build(nextCommit);
+        nextCommit = queue.shift();
+        builder.build.init(nextCommit);
     }
 };
 

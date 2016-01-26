@@ -9,7 +9,7 @@ module.exports = {
                 timestamp: request.body.head_commit.timestamp,
                 message: request.body.head_commit.message,
                 email: request.body.pusher.email,
-                name: request.body.repository.name
+                repo_name: request.body.repository.name
             }
         }
     },

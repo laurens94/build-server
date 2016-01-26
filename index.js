@@ -17,13 +17,12 @@ app.get('/', function (req, res) {
 
 app.post('/github', function (req, res) {
   var commit = parser.parseGithub(req);
-  var logMessage = '';
 
   if (commit) {
     queue.add(commit);
   }
 
-  res.status(200).send(logMessage);
+  res.status(200).send('Woop woop');
   res.end();
 });
 

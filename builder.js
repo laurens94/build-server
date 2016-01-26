@@ -1,18 +1,98 @@
-var fs = require('fs');
+var fs = require('fs'),
+  mkdirp = require('mkdirp'),
+  logger = require('./logger'),
+  Git = require("nodegit");
 
-module.exports = {
-    build: function (commit) {
-        // git clone if this is the first time
-        if (!fs.existsSync(sitesFolder + '/' + folderName)) {
-            // make sites folder if there wasn't one yet
-            if (!fs.existsSync(sitesFolder)){
-                shell.exec('cd '+ sitesFolder + '; mkdir ' + sitesFolder);
+var builder = {
+    build: {
+        init: function (commit) {
+            if (!fs.existsSync(__dirname + '/builds/' + commit.repo_name)) {
+                builder.build.clone(commit);
             }
+            else {
+                builder.build.pull(commit);
+            }
+        },
 
-            console.log('git clone git@github.com: ' + req.body.repository.full_name + '.git');
-            shell.exec('cd '+ sitesFolder + '; git clone git@github.com:' + req.body.repository.full_name + '.git');
-            console.log(colors.green('Done cloning %s\n'), folderName);
+        clone: function (commit) {
+            // Check if we have a builds folder.
+            mkdirp(__dirname + '/builds', function(err) {
+                logger.log('Ensured a builds folder', 'green');
+
+                Git.Clone(commit.repo, __dirname + '/builds/' + commit.repo_name)
+                .then(function(repo) {
+                    logger.log('Cloned repo: ' + commit.repo_name, 'yellow')
+                    builder.build.pull(commit);
+                })
+            });
+        },
+
+        pull: function (commit) {
+            Git.Repository.open(__dirname + '/builds/' + commit.repo_name)
+            .then(function(repo) {
+                repo.fetchAll().then(function() {
+                    logger.log('Pulled on repo: ' + commit.repo_name, 'yellow');
+                    builder.build.runChecks(commit);
+                });
+            })
+        },
+
+        runChecks: function (commit) {
+            builder.checks.forEach(function (check) {
+                if (fs.existsSync(__dirname + '/builds/' + commit.repo_name + '/' + check.filename)) {
+                    logger.log('Check ' + check.name + ' was successful', 'yellow');
+
+                    var exec = require('child_process').exec;
+                    exec(check.command, function(error, stdout, stderr) {
+
+                        console.log('stdout: ' + stdout);
+                        console.log('stderr: ' + stderr);
+
+                        if (error !== null) {
+                            console.log('exec error: ' + error);
+                        }
+                    });
+                }
+                else {
+                    logger.log('Check ' + check.name + ' was not successful', 'yellow');
+                }
+            })
         }
     },
 
+    checks: [
+        {
+            "name": "npm",
+            "filename": "package.json",
+            "command": "npm install",
+            "successMessage": "Done installing packages.",
+            "killable": false
+        },
+
+        {
+            "name": "bundler",
+            "filename": "Gemfile",
+            "command": "bundle install",
+            "successMessage": "Done installing gems.",
+            "killable": false
+        },
+
+        {
+            "name": "bower",
+            "filename": "bower.json",
+            "command": "bower install --allow-root",
+            "successMessage": "Done installing bower dependencies.",
+            "killable": false
+        },
+
+        {
+            "name": "grunt",
+            "filename": "Gruntfile.js",
+            "command": "grunt build",
+            "successMessage": "Succesfully deployed project.",
+            "killable": true
+        }
+    ]
 };
+
+module.exports = builder;
