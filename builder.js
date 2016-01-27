@@ -174,18 +174,37 @@ var builder = {
         },
 
         {
-            "name": "nginx",
+            "name": "vhost replacement",
             "filename": "vhost",
             "command": function (params) {
                 if (params.commit.repo_name) {
                     return  'sudo rm -f /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ' +
-                        'sudo cp ' + __dirname + '/builds/' + params.commit.repo_name + '/vhost /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ' +
-                        'sudo rm -rf /var/www/' + params.commit.repo_name + '; ' +
-                        'sudo cp -R ' + __dirname + '/builds/' + params.commit.repo_name + '/dist /var/www/' + params.commit.repo_name + '; ' +
-                        'sudo service nginx reload;';
+                        'sudo cp ' + __dirname + '/builds/' + params.commit.repo_name + '/vhost /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ';
                 }
             },
             "successMessage": "Succesfully deployed project.",
+            "killable": false
+        },
+
+        {
+            "name": "symlink creation",
+            "filename": "vhost",
+            "command": function (params) {
+                if (params.commit.repo_name) {
+                    return  'sudo rm -f /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ' +
+                        'sudo cp ' + __dirname + '/builds/' + params.commit.repo_name + '/vhost /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ';
+                }
+            },
+            "successMessage": "Succesfully created build symlink.",
+            "killable": false
+        },
+
+
+        {
+            "name": "nginx reload",
+            "filename": "vhost",
+            "command": "sudo service nginx reload",
+            "successMessage": "Reloaded nginx.",
             "killable": false
         }
     ]
