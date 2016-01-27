@@ -130,6 +130,10 @@ var builder = {
                             logger.log("error:\n\n" + error, 'yellow');
                         }
 
+                        if (params.check.post && typeof params.check.post == 'function') {
+                            params.check.post(params)
+                        }
+
                         resolve(params.check.successMessage);
                     });
                 }
@@ -178,24 +182,35 @@ var builder = {
             "filename": "vhost",
             "command": function (params) {
                 if (params.commit.repo_name) {
-                    return  'sudo rm -f /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ' +
-                        'sudo cp ' + __dirname + '/builds/' + params.commit.repo_name + '/vhost /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ';
+                    return  'sudo rm -f /var/www/vhosts/' + params.commit.repo_name + '; ' +
+                        'sudo cp ' + __dirname + '/builds/' + params.commit.repo_name + '/vhost /var/www/vhosts/' + params.commit.repo_name + '; ';
                 }
             },
-            "successMessage": "Succesfully deployed project.",
+            "successMessage": "Succesfully replaced the vhost.",
             "killable": false
         },
 
         {
-            "name": "symlink creation",
+            "name": "build folder copy",
             "filename": "vhost",
             "command": function (params) {
                 if (params.commit.repo_name) {
-                    return  'sudo rm -f /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ' +
-                        'sudo cp ' + __dirname + '/builds/' + params.commit.repo_name + '/vhost /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ';
+                    return 'sudo cp --parents ' + __dirname + '/builds/' + params.commit.repo_name + '/dist /var/www/' + params.commit.repo_name + '/' + params.commit.timestamp + '; ';
                 }
             },
-            "successMessage": "Succesfully created build symlink.",
+            "post": function (params) {
+                fs.readFile('/var/www/vhosts/' + params.commit.repo_name, 'utf8', function (err,data) {
+                    if (err) {
+                        return console.log(err);
+                    }
+                    var result = data.replace(/[REPLACE_WITH_BUILD_PATH]/g, '/dist /var/www/' + params.commit.repo_name + '/' + params.commit.timestamp);
+
+                    fs.writeFile('/var/www/vhosts/' + params.commit.repo_name, result, 'utf8', function (err) {
+                        if (err) return console.log(err);
+                    });
+                });
+            },
+            "successMessage": "Succesfully copied build.",
             "killable": false
         },
 
