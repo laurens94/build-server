@@ -1,11 +1,49 @@
 <h1>Static site builder</h1>
 
-<ul>
-    {{#each queue_items}}
-        <li>Test: {{ message }}</li>
-    {{/each}}
-</ul>
+{{#if current_build}}
+    <h2>Currently building</h2>
+    {{#with current_build}}
+        <table class="table table-striped">
+            <thead>
+            <th>Repo name</th>
+            <th>Commit</th>
+            <th>Email</th>
+            <th>Timestamp</th>
+            <th>Repo url</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ repo_name }}</td>
+                    <td>{{ message }}</td>
+                    <td>{{ email }}</td>
+                    <td>{{ timestamp }}</td>
+                    <td>{{ repo }}</td>
+                </tr>
+            </tbody>
+        </table>
+    {{/with}}
+{{/if }}
 
-{{#with current_build}}
-    {{ repo }}
-{{/with}}
+{{#if queue_items }}
+    <h2>Queue</h2>
+    <table class="table table-striped">
+        <thead>
+            <th>Repo name</th>
+            <th>Commit</th>
+            <th>Email</th>
+            <th>Timestamp</th>
+            <th>Repo url</th>
+        </thead>
+        <tbody>
+            {{#each queue_items}}
+                <tr>
+                    <td>{{ repo_name }}</td>
+                    <td>{{ message }}</td>
+                    <td>{{ email }}</td>
+                    <td>{{ timestamp }}</td>
+                    <td>{{ repo }}</td>
+                </tr>
+            {{/each}}
+        </tbody>
+    </table>
+{{/if }}

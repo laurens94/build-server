@@ -7,14 +7,27 @@ var fs = require('fs'),
 
 var currentCommit = null;
 
+var currentTerminalCommand;
+var mustKillNextCheck = false;
 var builder = {
 
     current: function () {
         return currentCommit;
     },
 
+    cancel: function (commit) {
+        if (currentCommit && commit.repo_name == currentCommit.repo_name && commit.branch == currentCommit.branch) {
+            currentTerminalCommand.kill('SIGINT');
+            currentCommit = null;
+            logger.log('Killed ' + commit.message, 'red');
+            mustKillNextCheck = true;
+        }
+    },
+
     build: {
         init: function (commit) {
+            mustKillNextCheck = false;
+
             currentCommit = commit;
 
             if (!fs.existsSync(__dirname + '/builds/' + commit.repo_name)) {
@@ -63,13 +76,18 @@ var builder = {
                 }
             });
 
-            async.series(checkPromises, function(err, results){
+            async.waterfall(checkPromises, function(err, results){
                 currentCommit = null;
             })
         },
         
         runCheck: function (params) {
             logger.log('Starting with executing ' + params.check.name, 'yellow');
+
+            if (mustKillNextCheck) {
+                mustKillNextCheck = false;
+                reject(Error("Canceled..."));
+            }
 
             return new Promise(function(resolve, reject) {
                 var command = '';
@@ -82,7 +100,7 @@ var builder = {
                 }
 
                 if (command) {
-                    exec(command, {
+                    currentTerminalCommand = exec(command, {
                         cwd: __dirname + '/builds/' + params.commit.repo_name
                     }, function(error, stdout, stderr) {
 

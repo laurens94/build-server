@@ -2,21 +2,20 @@ var queue = [],
   _ = require('lodash'),
   logger = require('./logger'),
   builder = require('./builder'),
-  interval = 0,
-  running = false;
+  interval = 0;
 
 var queuer = {
 
     // This get's triggered by an push event.
     add: function (commit) {
+        var currentBuild = builder.current();
+        if (currentBuild && commit.repo_name == currentBuild.repo_name && commit.branch == currentBuild.branch) {
+            builder.cancel(commit);
+        }
+
         queue.push(commit);
         queuer.deduplicate();
-
         logger.log('Added ' + commit.repo_name + ': "' + commit.message + '" to the queue.', 'yellow');
-
-        if (!builder.current()) {
-            queuer.next();
-        }
     },
 
     // This function keeps the oldest commit.
@@ -41,11 +40,16 @@ var queuer = {
     },
 
     tick: function () {
+        if (!builder.current() && queue.length) {
+            queuer.next();
+        }
     },
 
     next: function () {
-        nextCommit = queue.shift();
-        builder.build.init(nextCommit);
+        if (queue.length) {
+            nextCommit = queue.shift();
+            builder.build.init(nextCommit);
+        }
     },
 
     queue: function () {
