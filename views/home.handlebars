@@ -1,0 +1,11 @@
+<h1>Static site builder</h1>
+
+<ul>
+    {{#each queue_items}}
+        <li>Test: {{ message }}</li>
+    {{/each}}
+</ul>
+
+{{#with current_build}}
+    {{ repo }}
+{{/with}}

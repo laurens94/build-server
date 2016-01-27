@@ -1,6 +1,7 @@
 'use strict';
 
 var express = require('express'),
+  exphbs  = require('express-handlebars'),
   _ = require('lodash'),
   bodyParser = require('body-parser'),
   logger = require('./logger'),
@@ -8,11 +9,21 @@ var express = require('express'),
   parser = require('./commitParser');
 
 var app = express();
+
+app.engine('handlebars', exphbs({defaultLayout: 'main'}));
+app.set('view engine', 'handlebars');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.get('/', function (req, res) {
-  res.status(200).send(JSON.stringify(queue.current()));
+  res.render('home', {
+    queue_items: function () {
+      return queue.queue();
+    },
+    current_build: function () {
+      return queue.current();
+    }
+  });
 });
 
 app.post('/github', function (req, res) {
