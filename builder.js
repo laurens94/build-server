@@ -71,26 +71,31 @@ var builder = {
                     command = params.check.command;
                 }
 
-                exec(command, {
-                    cwd: __dirname + '/builds/' + params.commit.repo_name
-                }, function(error, stdout, stderr) {
+                if (command) {
+                    exec(command, {
+                        cwd: __dirname + '/builds/' + params.commit.repo_name
+                    }, function(error, stdout, stderr) {
 
-                    logger.log('After executing ' + params.check.name, 'yellow');
+                        logger.log(params.check.successMessage, 'yellow');
 
-                    if (stdout) {
-                        logger.log("stdout:\n\n" + stdout + "\n\n", 'yellow');
-                    }
+                        if (stdout) {
+                            logger.log("stdout:\n\n" + stdout + "\n\n", 'yellow');
+                        }
 
-                    if (stderr) {
-                        logger.log("stderr:\n\n" + stderr, 'yellow');
-                    }
+                        if (stderr) {
+                            logger.log("stderr:\n\n" + stderr, 'yellow');
+                        }
 
-                    if (error) {
-                        logger.log("error:\n\n" + error, 'yellow');
-                    }
+                        if (error) {
+                            logger.log("error:\n\n" + error, 'yellow');
+                        }
 
-                    resolve('Finnised ' + params.check.name);
-                });
+                        resolve(params.check.successMessage);
+                    });
+                }
+                else {
+                    reject(Error("Broken..."));
+                }
             });
         }
 
@@ -134,12 +139,14 @@ var builder = {
             "name": "nginx",
             "filename": "vhost",
             "command": function (params) {
-                return  'rm -f /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ' +
-                        'cp ' + __dirname + '/builds/' + params.commit.repo_name + '/vhost /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ' +
-                        'service nginx reload;';
+                if (params.commit.repo_name) {
+                    return  'sudo rm -f /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ' +
+                        'sudo cp ' + __dirname + '/builds/' + params.commit.repo_name + '/vhost /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ' +
+                        'sudo service nginx reload;';
+                }
             },
             "successMessage": "Succesfully deployed project.",
-            "killable": true
+            "killable": false
         }
     ]
 };
