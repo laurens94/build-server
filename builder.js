@@ -180,6 +180,7 @@ var builder = {
                 if (params.commit.repo_name) {
                     return  'sudo rm -f /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ' +
                         'sudo cp ' + __dirname + '/builds/' + params.commit.repo_name + '/vhost /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ' +
+                        'sudo rm -rf /var/www/' + params.commit.repo_name + '; ' +
                         'sudo cp -R ' + __dirname + '/builds/' + params.commit.repo_name + '/dist /var/www/' + params.commit.repo_name + '; ' +
                         'sudo service nginx reload;';
                 }
