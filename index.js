@@ -12,7 +12,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.get('/', function (req, res) {
-  res.status(200).send('Yo world');
+  res.status(200).send(JSON.stringify(queue.current()));
 });
 
 app.post('/github', function (req, res) {

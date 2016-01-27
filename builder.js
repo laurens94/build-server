@@ -5,9 +5,18 @@ var fs = require('fs'),
   exec = require('child_process').exec,
   Git = require("nodegit");
 
+var currentCommit = null;
+
 var builder = {
+
+    current: function () {
+        return currentCommit;
+    },
+
     build: {
         init: function (commit) {
+            currentCommit = commit;
+
             if (!fs.existsSync(__dirname + '/builds/' + commit.repo_name)) {
                 builder.build.clone(commit);
             }
@@ -55,6 +64,7 @@ var builder = {
             });
 
             async.series(checkPromises, function(err, results){
+                currentCommit = null;
             })
         },
         
@@ -98,8 +108,6 @@ var builder = {
                 }
             });
         }
-
-
     },
 
     checks: [

@@ -36,12 +36,20 @@ var queuer = {
         }, 2000);
     },
 
+    current: function () {
+      return builder.current();
+    },
+
     tick: function () {
     },
 
     next: function () {
         nextCommit = queue.shift();
         builder.build.init(nextCommit);
+    },
+
+    queue: function () {
+        return queue;
     }
 };
 
