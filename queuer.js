@@ -14,8 +14,8 @@ var queuer = {
 
         logger.log('Added ' + commit.repo_name + ': "' + commit.message + '" to the queue.', 'yellow');
 
-        if (!running) {
-            queuer.next()
+        if (!builder.current()) {
+            queuer.next();
         }
     },
 
