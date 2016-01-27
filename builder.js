@@ -112,7 +112,8 @@ var builder = {
 
                 if (command) {
                     currentTerminalCommand = exec(command, {
-                        cwd: __dirname + '/builds/' + params.commit.repo_name
+                        cwd: __dirname + '/builds/' + params.commit.repo_name,
+                        shell: '/bin/bash',
                     }, function(error, stdout, stderr) {
 
                         logger.log(params.check.successMessage, 'yellow');
