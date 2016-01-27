@@ -40,38 +40,61 @@ var builder = {
         },
 
         runChecks: function (commit) {
-            var checkFunctions = [];
-
+            var checkPromises = [];
             builder.checks.forEach(function (check) {
                 if (fs.existsSync(__dirname + '/builds/' + commit.repo_name + '/' + check.filename)) {
-                    logger.log('Check ' + check.name + ' was successful', 'yellow');
+                    logger.log('Check ' + check.filename + ' was found', 'yellow');
 
-                    checkFunctions.push(function (callback) {
-                        exec(check.command, {
-                            cwd: __dirname + '/builds/' + commit.repo_name
-                        }, function(error, stdout, stderr) {
-
-                            console.log('stdout: ' + stdout);
-                            console.log('stderr: ' + stderr);
-
-                            if (error !== null) {
-                                console.log('exec error: ' + error);
-                            }
-
-                            console.log(check)
-                            callback()
-                        });
-                    })
+                    checkPromises.push(async.asyncify(function () {
+                        return builder.build.runCheck({ commit: commit, check: check });
+                    }));
                 }
                 else {
                     logger.log('Check ' + check.name + ' was not successful', 'yellow');
                 }
             });
 
-            async.waterfall(checkFunctions, function (err, result) {
-                console.log(result)
+            async.series(checkPromises, function(err, results){
+            })
+        },
+        
+        runCheck: function (params) {
+            logger.log('Starting with executing ' + params.check.name, 'yellow');
+
+            return new Promise(function(resolve, reject) {
+                var command = '';
+
+                if (typeof params.check.command == 'function') {
+                    command = params.check.command(params);
+                }
+                else {
+                    command = params.check.command;
+                }
+
+                exec(command, {
+                    cwd: __dirname + '/builds/' + params.commit.repo_name
+                }, function(error, stdout, stderr) {
+
+                    logger.log('After executing ' + params.check.name, 'yellow');
+
+                    if (stdout) {
+                        logger.log("stdout:\n\n" + stdout + "\n\n", 'yellow');
+                    }
+
+                    if (stderr) {
+                        logger.log("stderr:\n\n" + stderr, 'yellow');
+                    }
+
+                    if (error) {
+                        logger.log("error:\n\n" + error, 'yellow');
+                    }
+
+                    resolve('Finnised ' + params.check.name);
+                });
             });
         }
+
+
     },
 
     checks: [
@@ -103,6 +126,18 @@ var builder = {
             "name": "grunt",
             "filename": "Gruntfile.js",
             "command": "grunt build",
+            "successMessage": "Succesfully deployed project.",
+            "killable": true
+        },
+
+        {
+            "name": "nginx",
+            "filename": "vhost",
+            "command": function (params) {
+                return  'rm -f /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ' +
+                        'cp ' + __dirname + '/builds/' + params.commit.repo_name + '/vhost /etc/nginx/sites-enabled/' + params.commit.repo_name + '; ' +
+                        'service nginx reload;';
+            },
             "successMessage": "Succesfully deployed project.",
             "killable": true
         }
