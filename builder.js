@@ -6,6 +6,7 @@ var fs = require('fs'),
   Git = require("nodegit");
 
 var currentCommit = null;
+var currentCheck = null;
 
 var currentTerminalCommand;
 var mustKillNextCheck = false;
@@ -17,9 +18,16 @@ var builder = {
 
     cancel: function (commit) {
         if (currentCommit && commit.repo_name == currentCommit.repo_name && commit.branch == currentCommit.branch) {
-            currentTerminalCommand.kill('SIGINT');
-            currentCommit = null;
-            logger.log('Killed ' + commit.message, 'red');
+
+            if (currentCheck && currentCheck.killable) {
+                currentTerminalCommand.kill('SIGINT');
+                currentCommit = null;
+                logger.log('Killed ' + commit.message, 'red');
+            }
+            else {
+                logger.log('Canceled ' + commit.message + ', but had a non killable task, will terminate the build when possible', 'red');
+            }
+
             mustKillNextCheck = true;
         }
     },
@@ -78,16 +86,19 @@ var builder = {
 
             async.waterfall(checkPromises, function(err, results){
                 currentCommit = null;
+                currentCheck = null;
             })
         },
         
         runCheck: function (params) {
-            logger.log('Starting with executing ' + params.check.name, 'yellow');
+            currentCheck = params.check;
 
             if (mustKillNextCheck) {
                 mustKillNextCheck = false;
                 reject(Error("Canceled..."));
             }
+
+            logger.log('Starting with executing ' + params.check.name, 'yellow');
 
             return new Promise(function(resolve, reject) {
                 var command = '';
