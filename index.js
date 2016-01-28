@@ -21,6 +21,7 @@ app.set('views', path.join(appRoot, 'views'));
 
 app.get('/', function (req, res) {
   res.render('home', {
+    root: appRoot,
     queue_items: function () {
       return queue.queue();
     },
