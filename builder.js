@@ -15,6 +15,9 @@ var currentCheck = null;
 
 var currentTerminalCommand;
 var mustKillNextCheck = false;
+
+var builderDomain = 'build.studiofonkel.nl';
+
 var builder = {
 
     current: function () {
@@ -231,7 +234,7 @@ var builder = {
                     cname = params.commit.branch + '.' + cname;
                 }
 
-                vhost = vhost.replace('[REPLACE_WITH_CNAME]', cname);
+                vhost = vhost.replace('[REPLACE_WITH_CNAME]', cname + ' ' + cname + builderDomain);
 
                 try {
                     fs.writeFile(builder.getVhostPath(params.commit), vhost);
@@ -258,6 +261,9 @@ var builder = {
                     }
 
                     ncp(builder.getSourcePath(params.commit) + '/dist', builder.getBuildPath(params.commit), function (err) {
+                        if (err) {
+                            console.log(err)
+                        }
                     });
                 });
 
