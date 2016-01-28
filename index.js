@@ -15,7 +15,7 @@ app.engine('handlebars', exphbs({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.set('views', path.join(__dirname, 'views/'));
+app.set('views', path.join(__dirname, '../views'));
 
 app.get('/', function (req, res) {
   res.render('home', {
