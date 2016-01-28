@@ -258,7 +258,6 @@ var builder = {
                     }
 
                     ncp(builder.getSourcePath(params.commit) + '/dist', builder.getBuildPath(params.commit), function (err) {
-                        console.log(err)
                     });
                 });
 
