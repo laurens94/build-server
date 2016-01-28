@@ -5,7 +5,8 @@ var fs = require('fs'),
   exec = require('child_process').exec,
   Git = require("nodegit"),
   path = require("path"),
-  ncp = require('ncp').ncp;
+  ncp = require('ncp').ncp,
+  rimraf = require('rimraf');
 
 ncp.limit = 16;
 
@@ -36,13 +37,29 @@ var builder = {
         }
     },
 
+    getSourcePath: function (commit) {
+        return __dirname + '/builds/' + commit.repo_name + '_' + commit.branch;
+    },
+
+    getBuildPath: function (commit) {
+        return '/var/www/' + commit.repo_name + '/' + commit.branch + '_' + commit.timestamp;
+    },
+
+    getBuildsPath: function (commit) {
+        return '/var/www/' + commit.repo_name;
+    },
+
+    getVhostPath: function (commit) {
+        return '/var/www/vhosts/' + commit.branch + '_' + commit.repo_name;
+    },
+
     build: {
         init: function (commit) {
             mustKillNextCheck = false;
 
             currentCommit = commit;
 
-            if (!fs.existsSync(__dirname + '/builds/' + commit.repo_name)) {
+            if (!fs.existsSync(builder.getSourcePath(commit))) {
                 builder.build.clone(commit);
             }
             else {
@@ -55,28 +72,40 @@ var builder = {
             mkdirp(__dirname + '/builds', function(err) {
                 logger.log('Ensured a builds folder', 'green');
 
-                Git.Clone(commit.repo, __dirname + '/builds/' + commit.repo_name)
-                .then(function(repo) {
-                    logger.log('Cloned repo: ' + commit.repo_name, 'yellow')
-                    builder.build.pull(commit);
-                })
+                var cloneOptions = { checkoutBranch: commit.branch };
+
+                try {
+                    Git.Clone(commit.repo, builder.getSourcePath(commit), cloneOptions)
+                    .then(function(repo) {
+                        logger.log('Cloned repo: ' + commit.repo_name, 'yellow')
+                        builder.build.pull(commit);
+                    })
+                }
+                catch(error) {
+                    console.log(error)
+                }
             });
         },
 
         pull: function (commit) {
-            Git.Repository.open(__dirname + '/builds/' + commit.repo_name)
-            .then(function(repo) {
-                repo.fetchAll().then(function() {
-                    logger.log('Pulled on repo: ' + commit.repo_name, 'yellow');
-                    builder.build.runChecks(commit);
-                });
-            })
+            try {
+                Git.Repository.open(builder.getSourcePath(commit))
+                .then(function (repo) {
+                    repo.fetchAll().then(function () {
+                        logger.log('Pulled on repo: ' + commit.repo_name, 'yellow');
+                        builder.build.runChecks(commit);
+                    });
+                })
+            }
+            catch(error) {
+                console.log(error)
+            }
         },
 
         runChecks: function (commit) {
             var checkPromises = [];
             builder.checks.forEach(function (check) {
-                if (fs.existsSync(__dirname + '/builds/' + commit.repo_name + '/' + check.filename)) {
+                if (fs.existsSync(builder.getSourcePath(commit) + '/' + check.filename)) {
                     logger.log('Check ' + check.filename + ' was found', 'yellow');
 
                     checkPromises.push(async.asyncify(function () {
@@ -116,7 +145,7 @@ var builder = {
 
                 if (execCommand) {
                     currentTerminalCommand = exec(execCommand, {
-                        cwd: __dirname + '/builds/' + params.commit.repo_name,
+                        cwd: builder.getSourcePath(params.commit),
                         shell: '/bin/bash',
                     }, function(error, stdout, stderr) {
 
@@ -143,7 +172,6 @@ var builder = {
                 }
                 else if (params.check.command && typeof params.check.command == 'function') {
                     var result = params.check.command(params);
-                    logger.log(result, 'yellow');
                     resolve(result);
                 }
                 else {
@@ -190,18 +218,23 @@ var builder = {
             "name": "vhost replacement",
             "filename": "vhost",
             "command": function (params) {
-                if (fs.existsSync('/var/www/vhosts/' + params.commit.repo_name)) {
-                    fs.unlinkSync('/var/www/vhosts/' + params.commit.repo_name);
+                if (fs.existsSync(builder.getVhostPath(params.commit))) {
+                    fs.unlinkSync(builder.getVhostPath(params.commit));
                 }
 
-                var cname = fs.readFileSync(__dirname + '/builds/' + params.commit.repo_name + '/CNAME').toString().trim();
-                var vhost = fs.readFileSync(__dirname + '/builds/' + params.commit.repo_name + '/vhost').toString().trim();
+                var cname = fs.readFileSync(builder.getSourcePath(params.commit) + '/CNAME').toString().trim();
+                var vhost = fs.readFileSync(builder.getSourcePath(params.commit) + '/vhost').toString().trim();
 
-                vhost = vhost.replace('[REPLACE_WITH_BUILD_PATH]', '/var/www/' + params.commit.repo_name + '/' + params.commit.timestamp);
+                vhost = vhost.replace('[REPLACE_WITH_BUILD_PATH]', builder.getBuildPath(params.commit));
+
+                if (params.commit.branch && params.commit.branch != 'master') {
+                    cname = params.commit.branch + '.' + cname;
+                }
+
                 vhost = vhost.replace('[REPLACE_WITH_CNAME]', cname);
 
                 try {
-                    fs.writeFile('/var/www/vhosts/' + params.commit.repo_name, vhost);
+                    fs.writeFile(builder.getVhostPath(params.commit), vhost);
                 }
                 catch(err) {
                     console.log(err)
@@ -217,16 +250,19 @@ var builder = {
             "name": "build folder copy",
             "filename": "vhost",
             "command": function (params) {
-                mkdirp('/var/www/' + params.commit.repo_name, function(err) {
-                    logger.log('Ensured /var/www/' + params.commit.repo_name + ' folder', 'green');
+                mkdirp(builder.getBuildsPath(params.commit), function(err) {
+                    logger.log('Ensured ' + builder.getBuildsPath(params.commit) + ' folder', 'green');
 
-                    ncp(__dirname + '/builds/' + params.commit.repo_name + '/dist', '/var/www/' + params.commit.repo_name + '/' + params.commit.timestamp, function (err) {
-                        if (err) {
-                            return console.error(err);
-                        }
-                        console.log('done!');
+                    if (params.commit.repo_name && params.commit.timestamp) {
+                        rimraf.sync(builder.getBuildPath(params.commit));
+                    }
+
+                    ncp(builder.getSourcePath(params.commit) + '/dist', builder.getBuildPath(params.commit), function (err) {
+                        console.log(err)
                     });
                 });
+
+                return 'build folder copy';
             },
             "successMessage": "Succesfully copied build.",
             "killable": false
