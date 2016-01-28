@@ -9,13 +9,15 @@ var express = require('express'),
   queue = require('./queuer'),
   parser = require('./commitParser');
 
+var appRoot = process.cwd();
+
 var app = express();
 
 app.engine('handlebars', exphbs({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.set('views', path.join(__dirname, '../views'));
+app.set('views', path.join(appRoot, '../views'));
 
 app.get('/', function (req, res) {
   res.render('home', {
