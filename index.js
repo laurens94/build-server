@@ -42,6 +42,6 @@ app.post('/github', function (req, res) {
 app.listen(3000, "0.0.0.0");
 
 logger.log('Started server on port 3000.', 'green');
-logger.log('Waiting for incoming GitHub events...', 'green');
+logger.log('Waiting for incoming push events...', 'green');
 
 queue.init();

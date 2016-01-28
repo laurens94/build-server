@@ -101,17 +101,17 @@ var builder = {
             logger.log('Starting with executing ' + params.check.name, 'yellow');
 
             return new Promise(function(resolve, reject) {
-                var command = '';
+                var exec = '';
 
-                if (typeof params.check.command == 'function') {
-                    command = params.check.command(params);
+                if (typeof params.check.exec == 'function') {
+                    exec = params.check.exec(params);
                 }
                 else {
-                    command = params.check.command;
+                    exec = params.check.exec;
                 }
 
-                if (command) {
-                    currentTerminalCommand = exec(command, {
+                if (exec) {
+                    currentTerminalCommand = exec(exec, {
                         cwd: __dirname + '/builds/' + params.commit.repo_name,
                         shell: '/bin/bash',
                     }, function(error, stdout, stderr) {
@@ -137,6 +137,10 @@ var builder = {
                         resolve(params.check.successMessage);
                     });
                 }
+                else if (params.check.command && typeof params.check.command == 'function') {
+                    var result = params.check.command();
+                    resolve(result);
+                }
                 else {
                     reject(Error("Broken..."));
                 }
@@ -148,7 +152,7 @@ var builder = {
         {
             "name": "npm",
             "filename": "package.json",
-            "command": "npm install",
+            "exec": "npm install",
             "successMessage": "Done installing packages.",
             "killable": false
         },
@@ -156,7 +160,7 @@ var builder = {
         {
             "name": "bundler",
             "filename": "Gemfile",
-            "command": "bundle install",
+            "exec": "bundle install",
             "successMessage": "Done installing gems.",
             "killable": false
         },
@@ -164,7 +168,7 @@ var builder = {
         {
             "name": "bower",
             "filename": "bower.json",
-            "command": "bower install --allow-root",
+            "exec": "bower install --allow-root",
             "successMessage": "Done installing bower dependencies.",
             "killable": false
         },
@@ -172,7 +176,7 @@ var builder = {
         {
             "name": "grunt",
             "filename": "Gruntfile.js",
-            "command": "grunt build",
+            "exec": "grunt build",
             "successMessage": "Succesfully deployed project.",
             "killable": true
         },
@@ -195,15 +199,17 @@ var builder = {
             "filename": "vhost",
             "command": function (params) {
                 if (params.commit.repo_name) {
-                    return 'sudo cp --parents ' + __dirname + '/builds/' + params.commit.repo_name + '/dist /var/www/' + params.commit.repo_name + '/' + params.commit.timestamp + '; ';
+                    return 'sudo cp --parents ' + __dirname + '/builds/' + params.commit.repo_name + '/dist/* /var/www/' + params.commit.repo_name + '/' + params.commit.timestamp + '; ';
                 }
             },
             "post": function (params) {
-                fs.readFile('/var/www/vhosts/' + params.commit.repo_name, 'utf8', function (err,data) {
-                    if (err) {
-                        return console.log(err);
-                    }
-                    var result = data.replace(/[REPLACE_WITH_BUILD_PATH]/g, '/dist /var/www/' + params.commit.repo_name + '/' + params.commit.timestamp);
+                fs.readFile('/var/www/vhosts/' + params.commit.repo_name, 'utf8', function (err, data) {
+                    if (err) { return console.log(err); }
+
+                    var cname = fs.readFileSync(__dirname + '/builds/' + params.commit.repo_name + '/CNAME');
+
+                    var result = data.replace(/[REPLACE_WITH_BUILD_PATH]/g, '/dist /var/www/' + params.commit.repo_name + '/' + params.commit.timestamp)
+                    .replace(/[REPLACE_WITH_CNAME]/g, cname);
 
                     fs.writeFile('/var/www/vhosts/' + params.commit.repo_name, result, 'utf8', function (err) {
                         if (err) return console.log(err);
@@ -218,7 +224,7 @@ var builder = {
         {
             "name": "nginx reload",
             "filename": "vhost",
-            "command": "sudo service nginx reload",
+            "exec": "sudo service nginx reload",
             "successMessage": "Reloaded nginx.",
             "killable": false
         }
