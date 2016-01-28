@@ -3,7 +3,11 @@ var fs = require('fs'),
   logger = require('./logger'),
   async = require('async'),
   exec = require('child_process').exec,
-  Git = require("nodegit");
+  Git = require("nodegit"),
+  path = require("path"),
+  ncp = require('ncp').ncp;
+
+ncp.limit = 16;
 
 var currentCommit = null;
 var currentCheck = null;
@@ -101,17 +105,17 @@ var builder = {
             logger.log('Starting with executing ' + params.check.name, 'yellow');
 
             return new Promise(function(resolve, reject) {
-                var exec = '';
+                var execCommand = '';
 
                 if (typeof params.check.exec == 'function') {
-                    exec = params.check.exec(params);
+                    execCommand = params.check.exec(params);
                 }
                 else {
-                    exec = params.check.exec;
+                    execCommand = params.check.exec;
                 }
 
-                if (exec) {
-                    currentTerminalCommand = exec(exec, {
+                if (execCommand) {
+                    currentTerminalCommand = exec(execCommand, {
                         cwd: __dirname + '/builds/' + params.commit.repo_name,
                         shell: '/bin/bash',
                     }, function(error, stdout, stderr) {
@@ -138,7 +142,8 @@ var builder = {
                     });
                 }
                 else if (params.check.command && typeof params.check.command == 'function') {
-                    var result = params.check.command();
+                    var result = params.check.command(params);
+                    logger.log(result, 'yellow');
                     resolve(result);
                 }
                 else {
@@ -185,10 +190,24 @@ var builder = {
             "name": "vhost replacement",
             "filename": "vhost",
             "command": function (params) {
-                if (params.commit.repo_name) {
-                    return  'sudo rm -f /var/www/vhosts/' + params.commit.repo_name + '; ' +
-                        'sudo cp ' + __dirname + '/builds/' + params.commit.repo_name + '/vhost /var/www/vhosts/' + params.commit.repo_name + '; ';
+                if (fs.existsSync('/var/www/vhosts/' + params.commit.repo_name)) {
+                    fs.unlinkSync('/var/www/vhosts/' + params.commit.repo_name);
                 }
+
+                var cname = fs.readFileSync(__dirname + '/builds/' + params.commit.repo_name + '/CNAME').toString().trim();
+                var vhost = fs.readFileSync(__dirname + '/builds/' + params.commit.repo_name + '/vhost').toString().trim();
+
+                vhost = vhost.replace('[REPLACE_WITH_BUILD_PATH]', '/var/www/' + params.commit.repo_name + '/' + params.commit.timestamp);
+                vhost = vhost.replace('[REPLACE_WITH_CNAME]', cname);
+
+                try {
+                    fs.writeFile('/var/www/vhosts/' + params.commit.repo_name, vhost);
+                }
+                catch(err) {
+                    console.log(err)
+                }
+
+                return 'done';
             },
             "successMessage": "Succesfully replaced the vhost.",
             "killable": false
@@ -198,28 +217,20 @@ var builder = {
             "name": "build folder copy",
             "filename": "vhost",
             "command": function (params) {
-                if (params.commit.repo_name) {
-                    return 'sudo cp --parents ' + __dirname + '/builds/' + params.commit.repo_name + '/dist/* /var/www/' + params.commit.repo_name + '/' + params.commit.timestamp + '; ';
-                }
-            },
-            "post": function (params) {
-                fs.readFile('/var/www/vhosts/' + params.commit.repo_name, 'utf8', function (err, data) {
-                    if (err) { return console.log(err); }
+                mkdirp('/var/www/' + params.commit.repo_name, function(err) {
+                    logger.log('Ensured /var/www/' + params.commit.repo_name + ' folder', 'green');
 
-                    var cname = fs.readFileSync(__dirname + '/builds/' + params.commit.repo_name + '/CNAME');
-
-                    var result = data.replace(/[REPLACE_WITH_BUILD_PATH]/g, '/dist /var/www/' + params.commit.repo_name + '/' + params.commit.timestamp)
-                    .replace(/[REPLACE_WITH_CNAME]/g, cname);
-
-                    fs.writeFile('/var/www/vhosts/' + params.commit.repo_name, result, 'utf8', function (err) {
-                        if (err) return console.log(err);
+                    ncp(__dirname + '/builds/' + params.commit.repo_name + '/dist', '/var/www/' + params.commit.repo_name + '/' + params.commit.timestamp, function (err) {
+                        if (err) {
+                            return console.error(err);
+                        }
+                        console.log('done!');
                     });
                 });
             },
             "successMessage": "Succesfully copied build.",
             "killable": false
         },
-
 
         {
             "name": "nginx reload",
