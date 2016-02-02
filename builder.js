@@ -6,7 +6,8 @@ var fs = require('fs'),
   Git = require("nodegit"),
   path = require("path"),
   ncp = require('ncp').ncp,
-  rimraf = require('rimraf');
+  rimraf = require('rimraf'),
+  cred = Git.Cred;
 
 ncp.limit = 16;
 
@@ -75,7 +76,14 @@ var builder = {
             mkdirp(__dirname + '/builds', function(err) {
                 logger.log('Ensured a builds folder', 'green');
 
-                var cloneOptions = { checkoutBranch: commit.branch };
+                var cloneOptions = {
+                    checkoutBranch: commit.branch,
+                    remoteCallbacks: {
+                        credentials: function (url, userName) {
+                            return cred.sshKeyFromAgent(userName);
+                        }
+                    }
+                };
 
                 try {
                     Git.Clone(commit.repo, builder.getSourcePath(commit), cloneOptions)
@@ -95,6 +103,7 @@ var builder = {
                 Git.Repository.open(builder.getSourcePath(commit))
                 .then(function (repo) {
                     repo.fetchAll().then(function () {
+                        repo.mergeBranches("master", "origin/master");
                         logger.log('Pulled on repo: ' + commit.repo_name, 'yellow');
                         builder.build.runChecks(commit);
                     });
