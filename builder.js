@@ -159,6 +159,7 @@ var builder = {
                     currentTerminalCommand = exec(execCommand, {
                         cwd: builder.getSourcePath(params.commit),
                         shell: '/bin/bash',
+                        maxBuffer: 1000 * 1024
                     }, function(error, stdout, stderr) {
 
                         logger.log(params.check.successMessage, 'yellow');
