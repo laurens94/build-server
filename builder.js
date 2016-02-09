@@ -103,7 +103,7 @@ var builder = {
                 Git.Repository.open(builder.getSourcePath(commit))
                 .then(function (repo) {
                     repo.fetchAll().then(function () {
-                        repo.mergeBranches("master", "origin/master");
+                        repo.mergeBranches(commit.branch, 'origin/' + commit.branch);
                         logger.log('Pulled on repo: ' + commit.repo_name, 'yellow');
                         builder.build.runChecks(commit);
                     });
