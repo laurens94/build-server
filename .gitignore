@@ -2,3 +2,4 @@ node_modules
 builds
 nohup.out
 .idea
+settings.json
