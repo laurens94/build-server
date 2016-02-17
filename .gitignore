@@ -3,3 +3,6 @@ builds
 nohup.out
 .idea
 settings.json
+.sass-cache
+css
+.tmp

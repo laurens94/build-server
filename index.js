@@ -11,13 +11,26 @@ var express = require('express'),
 
 var appRoot = process.cwd();
 
+var settings = require('./settings.json');
+var settingsDefault = require('./settings.default.json');
+
 var app = express();
 
+var mergedSettings = _.merge(settingsDefault, settings)
+
+var hbs = exphbs.create({
+  helpers: mergedSettings,
+  defaultLayout: 'main'
+});
+
+app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
-app.engine('handlebars', exphbs({defaultLayout: 'main'}));
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
 app.set('views', path.join(appRoot, 'views'));
+app.use(express.static('css'));
 
 app.get('/', function (req, res) {
   res.render('home', {
