@@ -117,16 +117,9 @@ var builder = {
         runChecks: function (commit) {
             var checkPromises = [];
             builder.checks.forEach(function (check) {
-                if (fs.existsSync(builder.getSourcePath(commit) + '/' + check.filename)) {
-                    logger.log('Check ' + check.filename + ' was found', 'yellow');
-
-                    checkPromises.push(async.asyncify(function () {
-                        return builder.build.runCheck({ commit: commit, check: check });
-                    }));
-                }
-                else {
-                    logger.log('Check ' + check.name + ' was not successful', 'yellow');
-                }
+                checkPromises.push(async.asyncify(function () {
+                    return builder.build.runCheck({ commit: commit, check: check });
+                }));
             });
 
             async.waterfall(checkPromises, function(err, results){
@@ -136,61 +129,70 @@ var builder = {
         },
         
         runCheck: function (params) {
+            var commit = params.commit;
             currentCheck = params.check;
 
-            if (mustKillNextCheck) {
-                mustKillNextCheck = false;
+            if (fs.existsSync(builder.getSourcePath(commit) + '/' + currentCheck.filename)) {
+                logger.log('Check ' + currentCheck.filename + ' was found', 'yellow');
+
+                if (mustKillNextCheck) {
+                    mustKillNextCheck = false;
+                    reject(Error("Canceled..."));
+                }
+
+                logger.log('Starting with executing ' + params.check.name, 'yellow');
+
+                return new Promise(function(resolve, reject) {
+                    var execCommand = '';
+
+                    if (typeof params.check.exec == 'function') {
+                        execCommand = params.check.exec(params);
+                    }
+                    else {
+                        execCommand = params.check.exec;
+                    }
+
+                    if (execCommand) {
+                        currentTerminalCommand = exec(execCommand, {
+                            cwd: builder.getSourcePath(params.commit),
+                            shell: '/bin/bash',
+                            maxBuffer: 1000 * 1024
+                        }, function(error, stdout, stderr) {
+
+                            logger.log(params.check.successMessage, 'yellow');
+
+                            if (stdout) {
+                                logger.log("stdout:\n\n" + stdout + "\n\n", 'yellow');
+                            }
+
+                            if (stderr) {
+                                logger.log("stderr:\n\n" + stderr, 'yellow');
+                            }
+
+                            if (error) {
+                                logger.log("error:\n\n" + error, 'yellow');
+                            }
+
+                            if (params.check.post && typeof params.check.post == 'function') {
+                                params.check.post(params)
+                            }
+
+                            resolve(params.check.successMessage);
+                        });
+                    }
+                    else if (params.check.command && typeof params.check.command == 'function') {
+                        var result = params.check.command(params);
+                        resolve(result);
+                    }
+                    else {
+                        reject(Error("Broken..."));
+                    }
+                });
+            }
+            else {
+                logger.log('Check ' + currentCheck.name + ' was not successful', 'yellow');
                 reject(Error("Canceled..."));
             }
-
-            logger.log('Starting with executing ' + params.check.name, 'yellow');
-
-            return new Promise(function(resolve, reject) {
-                var execCommand = '';
-
-                if (typeof params.check.exec == 'function') {
-                    execCommand = params.check.exec(params);
-                }
-                else {
-                    execCommand = params.check.exec;
-                }
-
-                if (execCommand) {
-                    currentTerminalCommand = exec(execCommand, {
-                        cwd: builder.getSourcePath(params.commit),
-                        shell: '/bin/bash',
-                        maxBuffer: 1000 * 1024
-                    }, function(error, stdout, stderr) {
-
-                        logger.log(params.check.successMessage, 'yellow');
-
-                        if (stdout) {
-                            logger.log("stdout:\n\n" + stdout + "\n\n", 'yellow');
-                        }
-
-                        if (stderr) {
-                            logger.log("stderr:\n\n" + stderr, 'yellow');
-                        }
-
-                        if (error) {
-                            logger.log("error:\n\n" + error, 'yellow');
-                        }
-
-                        if (params.check.post && typeof params.check.post == 'function') {
-                            params.check.post(params)
-                        }
-
-                        resolve(params.check.successMessage);
-                    });
-                }
-                else if (params.check.command && typeof params.check.command == 'function') {
-                    var result = params.check.command(params);
-                    resolve(result);
-                }
-                else {
-                    reject(Error("Broken..."));
-                }
-            });
         }
     },
 
