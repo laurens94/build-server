@@ -246,7 +246,8 @@ var builder = {
                     cname = params.commit.branch + '.' + cname;
                 }
 
-                vhost = vhost.replace('[REPLACE_WITH_CNAME]', cname + ' ' + cname + '.' + builderDomain);
+                vhost = vhost.replace('[REPLACE_WITH_CNAME]', cname);
+                vhost = vhost.replace('[REPLACE_WITH_ALIAS]', cname + '.' + builderDomain);
 
                 try {
                     fs.writeFile(builder.getVhostPath(params.commit), vhost);
