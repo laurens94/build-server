@@ -190,8 +190,10 @@ var builder = {
                 });
             }
             else {
-                logger.log('Check ' + currentCheck.name + ' was not successful', 'yellow');
-                reject(Error("Canceled..."));
+                return new Promise(function(resolve, reject) {
+                    logger.log('Check ' + currentCheck.name + ' was not successful', 'yellow');
+                    resolve(true)
+                })
             }
         }
     },
