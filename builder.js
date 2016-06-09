@@ -106,7 +106,6 @@ var builder = {
                         repo.mergeBranches(commit.branch, 'origin/' + commit.branch);
                         logger.log('Pulled on repo: ' + commit.repo_name, 'yellow');
                         builder.build.runChecks(commit);
-                        builder.build.garbageCollector(commit);
                     });
                 })
             }
@@ -308,6 +307,9 @@ var builder = {
                     ncp(builder.getSourcePath(params.commit) + '/dist', builder.getBuildPath(params.commit), function (err) {
                         if (err) {
                             console.log(err)
+                        }
+                        else {
+                            builder.build.garbageCollector(params.commit);
                         }
                     });
                 });
