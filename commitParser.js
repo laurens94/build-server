@@ -1,6 +1,6 @@
 module.exports = {
     parseGithub: function (request) {
-        if (request.body.ref) {
+        if (request.body.ref && request.body.head_commit && request.body.head_commit.timestamp) {
             var ref_splitted = request.body.ref.split('/');
 
             return {

@@ -106,12 +106,42 @@ var builder = {
                         repo.mergeBranches(commit.branch, 'origin/' + commit.branch);
                         logger.log('Pulled on repo: ' + commit.repo_name, 'yellow');
                         builder.build.runChecks(commit);
+                        builder.build.garbageCollector(commit);
                     });
                 })
             }
             catch(error) {
                 console.log(error)
             }
+        },
+
+        garbageCollector: function (commit) {
+            var folder = '/var/www/' + commit.repo_name;
+            var oldBuilds = [];
+
+            fs.readdir(folder, function(err, items) {
+                for (var i=0; i < items.length; i++) {
+
+                    if (items[i].substr(0, commit.branch.length) == commit.branch && commit.branch + '_' + commit.timestamp != items[i]) {
+                        oldBuilds.push(items[i]);
+                    }
+                }
+
+                // A > Z
+                oldBuilds.sort();
+
+                // Z > A
+                oldBuilds.reverse();
+
+                // The number is the threshold of builds we keep to roll back.
+                var buildsToRemove = oldBuilds.slice(2);
+
+                buildsToRemove.forEach(function (oldBuildFolderName) {
+                    rmdirAsync(folder + '/' + oldBuildFolderName, function () {
+                        console.log('Removed old build: ' + folder + '/' + oldBuildFolderName);
+                    });
+                });
+            });
         },
 
         runChecks: function (commit) {
@@ -296,6 +326,47 @@ var builder = {
             "killable": false
         }
     ]
+};
+
+var rmdirAsync = function(path, callback) {
+    fs.readdir(path, function(err, files) {
+        if(err) {
+            // Pass the error on to callback
+            callback(err, []);
+            return;
+        }
+        var wait = files.length,
+            count = 0,
+            folderDone = function(err) {
+                count++;
+                // If we cleaned out all the files, continue
+                if( count >= wait || err) {
+                    fs.rmdir(path,callback);
+                }
+            };
+        // Empty directory to bail early
+        if(!wait) {
+            folderDone();
+            return;
+        }
+
+        // Remove one or more trailing slash to keep from doubling up
+        path = path.replace(/\/+$/,"");
+        files.forEach(function(file) {
+            var curPath = path + "/" + file;
+            fs.lstat(curPath, function(err, stats) {
+                if( err ) {
+                    callback(err, []);
+                    return;
+                }
+                if( stats.isDirectory() ) {
+                    rmdirAsync(curPath, folderDone);
+                } else {
+                    fs.unlink(curPath, folderDone);
+                }
+            });
+        });
+    });
 };
 
 module.exports = builder;
