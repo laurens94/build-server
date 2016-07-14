@@ -1,7 +1,8 @@
-<h1>{{ name }}</h1>
+<h1 data-letter="{{ name }}">{{ name }}</h1>
 
 {{#if current_build}}
-    <h2>Currently building</h2>
+    <div class="current-building">		
+    <h2 data-letter="Currently building">Currently building</h2>
     {{#with current_build}}
         <table class="table table-striped">
             <thead>
@@ -22,10 +23,12 @@
             </tbody>
         </table>
     {{/with}}
+    </div>
 {{/if }}
 
 {{#if queue_items }}
-    <h2>Queue</h2>
+    <div class="queue">
+    <h2 data-letter="Queue">Queue</h2>
     <table class="table table-striped">
         <thead>
             <th>Repo name</th>
@@ -46,4 +49,5 @@
             {{/each}}
         </tbody>
     </table>
+    </div>
 {{/if }}
