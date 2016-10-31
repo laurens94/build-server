@@ -77,12 +77,7 @@ var builder = {
                 logger.log('Ensured a builds folder', 'green');
 
                 var cloneOptions = {
-                    checkoutBranch: commit.branch,
-                    remoteCallbacks: {
-                        credentials: function (url, userName) {
-                            return cred.sshKeyFromAgent(userName);
-                        }
-                    }
+                    checkoutBranch: commit.branch
                 };
 
                 try {

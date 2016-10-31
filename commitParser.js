@@ -4,7 +4,7 @@ module.exports = {
             var ref_splitted = request.body.ref.split('/');
 
             return {
-                repo: request.body.repository.git_url,
+                repo: request.body.repository.html_url,
                 branch: ref_splitted[2],
                 timestamp: request.body.head_commit.timestamp,
                 message: request.body.head_commit.message,

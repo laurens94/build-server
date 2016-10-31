@@ -12,6 +12,7 @@
     "body-parser": "*",
     "colors": "^1.0.3",
     "debug": "*",
+    "dotenv": "^2.0.0",
     "express": "~4.0.0",
     "express-handlebars": "^3.0.0",
     "grunt": "0.4.5",
