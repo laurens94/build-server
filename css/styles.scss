@@ -1,0 +1,180 @@
+$black: #000000;
+$white: #ffffff;
+$yellow: #f8bf00;
+$gray-light: #efefef;
+$gray: #7f7f7f;
+$gray-dark: #545454;
+
+$gutter: 20px;
+$max-width: 960px;
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  font-size: 100%;
+  font-family: 'Arial', sans-serif;
+}
+
+.container {
+  width: 100%;
+  max-width: $max-width;
+  margin: 0 auto;
+
+  h1 {
+    color: $gray-dark;
+    float: left;
+    clear: both;
+    margin: $gutter 0;
+  }
+
+  .current-building {
+    float: left;
+    clear: both;
+    width: 100%;
+    background-color: $gray-light;
+    margin-bottom: $gutter;
+
+    h2 {
+      margin: 0;
+      padding: $gutter / 2 $gutter;
+      width: 100%;
+      background-color: transparent;
+      color: $white;
+      position: relative;
+      z-index: 3;
+
+      &:before {
+        content: "";
+        display: block;
+        position: absolute;
+        background-color: $gray-dark;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+        z-index: -2;
+      }
+
+      &:after {
+        //content: "";
+        //display: block;
+        //position: absolute;
+        //background-color: $yellow;
+        //width: 100%;
+        //height: 100%;
+        //left: 0;
+        //top: 0;
+        //z-index: -1;
+        //animation: title-animation 5s linear;
+      }
+    }
+  }
+
+  .queue {
+    float: left;
+    clear: both;
+    width: 100%;
+    background-color: $gray-light;
+    margin-bottom: $gutter;
+
+    h2 {
+      margin: 0;
+      padding: $gutter / 2 $gutter;
+      width: 100%;
+      background-color: $gray-dark;
+      color: $white;
+      position: relative;
+      z-index: 3;
+    }
+  }
+
+  table {
+    border-collapse: collapse !important;
+    border: 0 none !important;
+
+    thead {
+      background-color: $gray;
+      color: $white;
+
+      th {
+        padding: 5px 10px;
+        text-align: left;
+
+        &:nth-child(1) {
+          padding-left: $gutter;
+          width: 35%;
+        }
+
+        &:nth-child(2) {
+          width: 35%;
+        }
+
+        &:nth-child(3),
+        &:nth-child(4),
+        &:nth-child(5) {
+          width: 10% !important;
+        }
+      }
+    }
+
+    tbody {
+      color: $gray-dark;
+      
+      tr {
+        position: relative;
+        transition: all .2s linear;
+
+        &:hover {
+          background-color: lighten($gray, 30);
+        }
+      }
+
+      td {
+        padding: 5px 10px;
+        text-align: left;
+        font-size: 85%;
+        height: 100px;
+        vertical-align: middle;
+        width: auto;
+        transition: all .2s linear;
+
+        &:nth-child(1) {
+          padding-left: $gutter;
+        }
+
+        &:hover {
+          background-color: lighten($gray, 20);
+          color: $white;
+        }
+      }
+    }
+  }
+}
+
+//@keyframes title-animation {
+//  0% {
+//    width: 0%;
+//  }
+//
+//  20% {
+//    width: 40%;
+//  }
+//
+//  40% {
+//    width: 60%;
+//  }
+//
+//  60% {
+//    width: 70%;
+//  }
+//
+//  80% {
+//    width: 85%;
+//  }
+//
+//  100% {
+//    width: 100%;
+//  }
+//}

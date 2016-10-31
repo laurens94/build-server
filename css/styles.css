@@ -1,0 +1,93 @@
+* {
+  box-sizing: border-box; }
+
+html, body {
+  font-size: 100%;
+  font-family: 'Arial', sans-serif; }
+
+.container {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto; }
+  .container h1 {
+    color: #545454;
+    float: left;
+    clear: both;
+    margin: 20px 0; }
+  .container .current-building {
+    float: left;
+    clear: both;
+    width: 100%;
+    background-color: #efefef;
+    margin-bottom: 20px; }
+    .container .current-building h2 {
+      margin: 0;
+      padding: 10px 20px;
+      width: 100%;
+      background-color: transparent;
+      color: #ffffff;
+      position: relative;
+      z-index: 3; }
+      .container .current-building h2:before {
+        content: "";
+        display: block;
+        position: absolute;
+        background-color: #545454;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+        z-index: -2; }
+  .container .queue {
+    float: left;
+    clear: both;
+    width: 100%;
+    background-color: #efefef;
+    margin-bottom: 20px; }
+    .container .queue h2 {
+      margin: 0;
+      padding: 10px 20px;
+      width: 100%;
+      background-color: #545454;
+      color: #ffffff;
+      position: relative;
+      z-index: 3; }
+  .container table {
+    border-collapse: collapse !important;
+    border: 0 none !important; }
+    .container table thead {
+      background-color: #7f7f7f;
+      color: #ffffff; }
+      .container table thead th {
+        padding: 5px 10px;
+        text-align: left; }
+        .container table thead th:nth-child(1) {
+          padding-left: 20px;
+          width: 35%; }
+        .container table thead th:nth-child(2) {
+          width: 35%; }
+        .container table thead th:nth-child(3), .container table thead th:nth-child(4), .container table thead th:nth-child(5) {
+          width: 10% !important; }
+    .container table tbody {
+      color: #545454; }
+      .container table tbody tr {
+        position: relative;
+        transition: all .2s linear; }
+        .container table tbody tr:hover {
+          background-color: #cccccc; }
+      .container table tbody td {
+        padding: 5px 10px;
+        text-align: left;
+        font-size: 85%;
+        height: 100px;
+        vertical-align: middle;
+        width: auto;
+        transition: all .2s linear; }
+        .container table tbody td:nth-child(1) {
+          padding-left: 20px; }
+        .container table tbody td:hover {
+          background-color: #b2b2b2;
+          color: #ffffff; }
+
+/*# sourceMappingURL=styles.css.map */
+
