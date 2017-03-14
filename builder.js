@@ -256,6 +256,14 @@ var builder = {
         },
 
         {
+            "name": "gulp",
+            "filename": "gulpfile.js",
+            "exec": "gulp build",
+            "successMessage": "Succesfully deployed project.",
+            "killable": true
+        },
+
+        {
             "name": "vhost replacement",
             "filename": "vhost",
             "command": function (params) {
