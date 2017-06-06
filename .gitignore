@@ -8,3 +8,4 @@ css
 .tmp
 id_rsa
 id_rsa.pub
+.well-known
