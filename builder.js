@@ -17,7 +17,7 @@ var currentCheck = null;
 var currentTerminalCommand;
 var mustKillNextCheck = false;
 
-var builderDomain = 'build.studiofonkel.nl';
+var builderDomain = 'build.bruijn.me';
 
 var builder = {
 
@@ -72,6 +72,10 @@ var builder = {
         },
 
         clone: function (commit) {
+
+            logger.log('Cloning commit:', 'green');
+            console.log(commit);
+
             // Check if we have a builds folder.
             mkdirp(__dirname + '/builds', function(err) {
                 logger.log('Ensured a builds folder', 'green');
@@ -80,16 +84,17 @@ var builder = {
                     checkoutBranch: commit.branch
                 };
 
-                try {
-                    Git.Clone(commit.repo, builder.getSourcePath(commit), cloneOptions)
-                    .then(function(repo) {
+		var errorAndAttemptOpen = function() {
+ 		    return NodeGit.Repository.open(local);
+		};
+
+                var cloneRepo = Git.Clone(commit.repo, builder.getSourcePath(commit), cloneOptions);
+                cloneRepo.catch(errorAndAttemptOpen)
+                    .then(function(repository) {
+                        console.log("Is the repository bare? %s", Boolean(repository.isBare()));
                         logger.log('Cloned repo: ' + commit.repo_name, 'yellow')
                         builder.build.pull(commit);
-                    })
-                }
-                catch(error) {
-                    console.log(error)
-                }
+                    });
             });
         },
 
