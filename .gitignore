@@ -9,3 +9,4 @@ css
 id_rsa
 id_rsa.pub
 .well-known
+yarn-error.log
