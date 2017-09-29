@@ -13,4 +13,4 @@
 `sudo forever start index.js`
 
 ### Stop
-`sudo forever stopall`
+`sudo forever stop index.js`
