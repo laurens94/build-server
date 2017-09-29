@@ -1,10 +1,9 @@
 # Prerequisites
-- nginx
+- nginx (with `include /var/www/vhosts/*;` in config)
 - node 4.5.0
 
 # Installation:
-- `npm install`
-- `touch .env`
+- `yarn` or `npm install`
 - Copy and edit contents of `.env.example` to `.env`
 
 # Usage:
