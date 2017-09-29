@@ -17,7 +17,7 @@ var currentCheck = null;
 var currentTerminalCommand;
 var mustKillNextCheck = false;
 
-var builderDomain = 'build.bruijn.me';
+var builderDomain = process.env.BUILDER_DOMAIN;
 
 var builder = {
 

@@ -5,8 +5,7 @@
 # Installation:
 - `npm install`
 - `touch .env`
-- Add the following line to `.env`:
-  `GIT_HOOK_SECRET=your-secret-key-here`
+- Copy and edit contents of `.env.example` to `.env`
 
 # Usage:
 - `sudo forever start index.js`
