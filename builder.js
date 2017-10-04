@@ -59,7 +59,7 @@ var builder = {
 
     build: {
         init: function (commit) {
-            logger.log('Running builder.build.init', 'gray');
+            logger.log('Running builder.build.init', 'white');
             mustKillNextCheck = false;
 
             currentCommit = commit;
@@ -99,6 +99,8 @@ var builder = {
         },
 
         pull: function (commit) {
+            logger.log('Running builder.build.pull', 'white');
+		
             try {
                 Git.Repository.open(builder.getSourcePath(commit))
                 .then(function (repo) {
