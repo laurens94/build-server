@@ -5,7 +5,7 @@
 - node with npm
 
 ## Installation
-1. Run `sudo visudo` and add the following line (replace `thisuser` with an existing user):  
+1. Run `sudo visudo` and add the following line *(replace `thisuser` with an existing user)*:  
   `thisuser ALL=(ALL) NOPASSWD: /usr/sbin/service nginx start,/usr/sbin/service nginx stop,/usr/sbin/service nginx restart`
 2. `yarn` or `npm install`
 3. Copy and edit contents of `.env.example` to `.env`
