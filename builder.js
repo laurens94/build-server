@@ -334,7 +334,7 @@ var builder = {
         {
             "name": "nginx reload",
             "filename": "vhost",
-            "exec": "sudo service nginx reload",
+            "exec": "sudo /usr/sbin/service nginx restart",
             "successMessage": "Reloaded nginx.",
             "killable": false
         }
