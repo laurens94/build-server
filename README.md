@@ -2,15 +2,18 @@
 
 ## Prerequisites
 - nginx (with `include /var/www/vhosts/*;` in config)
-- node 4.5.0
+- node with npm
 
 ## Installation
-- `yarn` or `npm install`
-- Copy and edit contents of `.env.example` to `.env`
+1. Run `sudo visudo` and add the following line (replace `thisuser` with an existing user):  
+  `thisuser ALL=(ALL) NOPASSWD: /usr/sbin/service nginx start,/usr/sbin/service nginx stop,/usr/sbin/service nginx restart`
+2. `yarn` or `npm install`
+3. Copy and edit contents of `.env.example` to `.env`
 
 ## Usage
 ### Start
-`sudo forever start index.js`
+`forever start --uid "thisuser" -a index.js`  
+*(replace `thisuser` with the same user given in step 1 under Installation)*
 
 ### Stop
-`sudo forever stop index.js`
+`forever stop index.js`
