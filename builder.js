@@ -74,6 +74,7 @@ var builder = {
         clone: function (commit) {
 
             logger.log('Cloning commit:', 'green');
+            logger.log(commit.repo, 'rainbow');
 
             // Check if we have a builds folder.
             mkdirp(__dirname + '/builds', function(err) {
