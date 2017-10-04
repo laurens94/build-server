@@ -74,7 +74,6 @@ var builder = {
         clone: function (commit) {
 
             logger.log('Cloning commit:', 'green');
-            console.log(commit);
 
             // Check if we have a builds folder.
             mkdirp(__dirname + '/builds', function(err) {
@@ -85,13 +84,12 @@ var builder = {
                 };
 
 		var errorAndAttemptOpen = function() {
- 		    return NodeGit.Repository.open(local);
+ 		    return Git.Repository.open(builder.getSourcePath(commit));
 		};
 
                 var cloneRepo = Git.Clone(commit.repo, builder.getSourcePath(commit), cloneOptions);
                 cloneRepo.catch(errorAndAttemptOpen)
                     .then(function(repository) {
-                        console.log("Is the repository bare? %s", Boolean(repository.isBare()));
                         logger.log('Cloned repo: ' + commit.repo_name, 'yellow')
                         builder.build.pull(commit);
                     });
@@ -110,7 +108,7 @@ var builder = {
                 })
             }
             catch(error) {
-                console.log(error)
+		logger.log(error, 'red');
             }
         },
 
@@ -293,6 +291,7 @@ var builder = {
                 }
                 catch(err) {
                     console.log(err)
+                    logger.log(err, 'red');
                 }
 
                 return 'done';
