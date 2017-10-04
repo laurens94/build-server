@@ -59,6 +59,7 @@ var builder = {
 
     build: {
         init: function (commit) {
+            logger.log('Running builder.build.init', 'gray');
             mustKillNextCheck = false;
 
             currentCommit = commit;
