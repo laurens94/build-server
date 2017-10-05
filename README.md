@@ -9,7 +9,7 @@
   `thisuser ALL=(ALL) NOPASSWD: /usr/sbin/service nginx start,/usr/sbin/service nginx stop,/usr/sbin/service nginx restart`
 2. `yarn` or `npm install`
 3. Copy and edit contents of `.env.example` to `.env`:
-4. Create an access token: https://github.com/settings/tokens, and save the variable in `.env` as `GITHUB_TOKEN`
+4. [Create an access token](https://github.com/settings/tokens) and save the variable as `GITHUB_TOKEN` in `.env`
 
 ## Usage
 ### Start
