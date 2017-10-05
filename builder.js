@@ -107,30 +107,10 @@ var builder = {
                 var cloneRepo = Git.Clone(commit.repo, builder.getSourcePath(commit), cloneOptions);
                 cloneRepo.catch(errorAndAttemptOpen)
                     .then(function(repository) {
-                        logger.log('Cloned repo: ' + commit.repo_name, 'yellow')
-//                        builder.build.pull(commit);
-			  builder.build.runChecks(commit);
+                        logger.log('Cloned repo: ' + commit.repo_name, 'yellow');
+			builder.build.runChecks(commit);
                     });
             });
-        },
-
-        pull: function (commit) {
-            logger.log('Running builder.build.pull', 'white');
-
-            try {
-                Git.Repository.open(builder.getSourcePath(commit))
-                .then(function (repo) {
-	 	    logger.log('Fetching', 'white');
-                    repo.fetchAll().then(function () {
-                        repo.mergeBranches(commit.branch, 'origin/' + commit.branch);
-                        logger.log('Pulled on repo: ' + commit.repo_name, 'yellow');
-                        builder.build.runChecks(commit);
-                    });
-                })
-            }
-            catch(error) {
-		logger.log(error, 'red');
-            }
         },
 
         garbageCollector: function (commit) {
