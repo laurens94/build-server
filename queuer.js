@@ -1,8 +1,8 @@
 var queue = [],
-  _ = require('lodash'),
-  logger = require('./logger'),
-  builder = require('./builder'),
-  interval = 0;
+    _ = require('lodash'),
+    logger = require('./logger'),
+    builder = require('./builder'),
+    interval = 0;
 
 var queuer = {
 
@@ -21,12 +21,12 @@ var queuer = {
     // This function keeps the oldest commit.
     deduplicate: function () {
         queue = _.uniqBy(queue, function (commit) {
-            return commit.repo + commit.branch
+            return commit.repo + commit.branch;
         });
 
         queue = _.sortBy(queue, function (commit) {
             return commit.timestamp;
-        })
+        });
     },
 
     init: function () {
@@ -36,7 +36,7 @@ var queuer = {
     },
 
     current: function () {
-      return builder.current();
+        return builder.current();
     },
 
     tick: function () {
