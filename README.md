@@ -18,3 +18,6 @@
 
 ### Stop
 `forever stop index.js`
+
+## Todo:
+- fix builder.pull function with credentials
