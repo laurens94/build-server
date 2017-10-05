@@ -64,11 +64,17 @@ var builder = {
 
             currentCommit = commit;
 
-            if (!fs.existsSync(builder.getSourcePath(commit))) {
+	    var folderToBuild = builder.getSourcePath(commit);
+
+            if (!fs.existsSync(folderToBuild)) {
                 builder.build.clone(commit);
             }
             else {
-                builder.build.pull(commit);
+		// Remove folder then clone:
+		rmdirAsync(folderToBuild, function () {
+                  console.log('Removed old build: ' + folderToBuild);
+		  builder.build.clone(commit);
+                });
             }
         },
 
@@ -85,6 +91,15 @@ var builder = {
                     checkoutBranch: commit.branch
                 };
 
+                cloneOptions.fetchOpts = {
+                  callbacks: {
+                    certificateCheck: function() { return 1; },
+                    credentials: function() {
+                      return Git.Cred.userpassPlaintextNew(process.env.GITHUB_TOKEN, "x-oauth-basic");
+                    }
+                  }
+                };
+
 		var errorAndAttemptOpen = function() {
  		    return Git.Repository.open(builder.getSourcePath(commit));
 		};
@@ -93,17 +108,19 @@ var builder = {
                 cloneRepo.catch(errorAndAttemptOpen)
                     .then(function(repository) {
                         logger.log('Cloned repo: ' + commit.repo_name, 'yellow')
-                        builder.build.pull(commit);
+//                        builder.build.pull(commit);
+			  builder.build.runChecks(commit);
                     });
             });
         },
 
         pull: function (commit) {
             logger.log('Running builder.build.pull', 'white');
-		
+
             try {
                 Git.Repository.open(builder.getSourcePath(commit))
                 .then(function (repo) {
+	 	    logger.log('Fetching', 'white');
                     repo.fetchAll().then(function () {
                         repo.mergeBranches(commit.branch, 'origin/' + commit.branch);
                         logger.log('Pulled on repo: ' + commit.repo_name, 'yellow');

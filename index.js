@@ -84,12 +84,9 @@ app.get('/', function (req, res) {
 });
 
 app.post('/github', function (req, res) {
-  console.log('POST gemaakt');
-
   var commit = parser.parseGithub(req);
 
   if (commit) {
-    console.log('commit gemaakt');
     queue.add(commit);
   }
 
