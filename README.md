@@ -21,4 +21,5 @@
 `forever stop index.js`
 
 ## Todo:
+- nginx test
 - do something with permissions, so repositories can only read/write in their own repo (for gulp/npm postinstall scripts etc)
