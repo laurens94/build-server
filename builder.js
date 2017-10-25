@@ -88,7 +88,7 @@ var builder = {
                 logger.log('Ensured a builds folder', 'green');
 
                 var cloneOptions = {
-                    checkoutBranch: commit.branch,
+                    checkoutBranch: commit.branch
                 };
 
                 cloneOptions.fetchOpts = {
@@ -99,8 +99,8 @@ var builder = {
                         credentials: function() {
                             return Git.Cred.userpassPlaintextNew(
                                 process.env.GITHUB_TOKEN, 'x-oauth-basic');
-                        },
-                    },
+                        }
+                    }
                 };
 
                 var errorAndAttemptOpen = function() {
@@ -124,7 +124,20 @@ var builder = {
                     then(function(repo) {
                         logger.log('Trying to pull - 2', 'white');
 
-                        repo.fetchAll().then(function() {
+                        var fetchOptions = {
+                            callbacks: {
+                                certificateCheck: function() {
+                                    return 1;
+                                },
+                                credentials: function() {
+                                    return Git.Cred.userpassPlaintextNew(
+                                        process.env.GITHUB_TOKEN,
+                                        'x-oauth-basic');
+                                }
+                            }
+                        };
+
+                        repo.fetchAll(fetchOptions).then(function() {
                             logger.log('Trying to pull - 3', 'white');
                             repo.mergeBranches(commit.branch, 'origin/' +
                                 commit.branch);
@@ -217,7 +230,7 @@ var builder = {
                         currentTerminalCommand = exec(execCommand, {
                             cwd: builder.getSourcePath(params.commit),
                             shell: '/bin/bash',
-                            maxBuffer: 1000 * 1024,
+                            maxBuffer: 1000 * 1024
                         }, function(error, stdout, stderr) {
 
                             logger.log(params.check.successMessage, 'yellow');
@@ -260,7 +273,7 @@ var builder = {
                     resolve(true);
                 });
             }
-        },
+        }
     },
 
     checks: [
@@ -269,7 +282,7 @@ var builder = {
             'filename': 'package.json',
             'exec': 'npm install',
             'successMessage': 'Done installing packages.',
-            'killable': false,
+            'killable': false
         },
 
         {
@@ -277,7 +290,7 @@ var builder = {
             'filename': 'Gemfile',
             'exec': 'bundle install',
             'successMessage': 'Done installing gems.',
-            'killable': false,
+            'killable': false
         },
 
         {
@@ -285,7 +298,7 @@ var builder = {
             'filename': 'bower.json',
             'exec': 'bower install --allow-root',
             'successMessage': 'Done installing bower dependencies.',
-            'killable': false,
+            'killable': false
         },
 
         {
@@ -293,7 +306,7 @@ var builder = {
             'filename': 'Gruntfile.js',
             'exec': 'grunt build',
             'successMessage': 'Succesfully deployed project.',
-            'killable': true,
+            'killable': true
         },
 
         {
@@ -301,7 +314,7 @@ var builder = {
             'filename': 'gulpfile.js',
             'exec': 'gulp build',
             'successMessage': 'Succesfully deployed project.',
-            'killable': true,
+            'killable': true
         },
 
         {
@@ -339,7 +352,7 @@ var builder = {
                 return 'done';
             },
             'successMessage': 'Succesfully replaced the vhost.',
-            'killable': false,
+            'killable': false
         },
 
         {
@@ -369,7 +382,7 @@ var builder = {
                 return 'build folder copy';
             },
             'successMessage': 'Succesfully copied build.',
-            'killable': false,
+            'killable': false
         },
 
         {
@@ -377,9 +390,9 @@ var builder = {
             'filename': 'vhost',
             'exec': 'sudo /usr/sbin/service nginx restart',
             'successMessage': 'Reloaded nginx.',
-            'killable': false,
-        },
-    ],
+            'killable': false
+        }
+    ]
 };
 
 var rmdirAsync = function(path, callback) {
