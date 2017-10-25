@@ -39,13 +39,15 @@ function verifyRequest (req, res, buf, encoding) {
     var expected = req.headers['x-hub-signature'];
     var calculated = getSignature(buf);
     if (expected) {
-        console.log ('Expected present');
-    }
-    if (expected !== calculated) {
-        throw new Error('Invalid signature.');
+        if (expected !== calculated) {
+            throw new Error('Invalid signature.');
+        }
+        else {
+            console.log('Valid signature!');
+        }
     }
     else {
-        console.log('Valid signature!');
+        console.log('No signature sent, continue');
     }
 }
 
