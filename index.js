@@ -37,14 +37,17 @@ function getSignature (buf) {
 // Read more: https://github.com/expressjs/body-parser#verify
 function verifyRequest (req, res, buf, encoding) {
     var expected = req.headers['x-hub-signature'];
-    console.log(expected);
     var calculated = getSignature(buf);
-    console.log(calculated);
-    if (expected !== calculated) {
-        throw new Error('Invalid signature.');
+    if (expected) {
+        if (expected !== calculated) {
+            throw new Error('Invalid signature.');
+        }
+        else {
+            console.log('Valid signature!');
+        }
     }
     else {
-        console.log('Valid signature!');
+        console.log('No signature sent, continue');
     }
 }
 
