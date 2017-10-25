@@ -4,7 +4,6 @@ nohup.out
 .idea
 settings.json
 .sass-cache
-css
 .tmp
 id_rsa
 id_rsa.pub
