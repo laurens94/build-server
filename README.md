@@ -26,6 +26,7 @@ server {
 2. `yarn` or `npm install`
 3. Copy and edit contents of `.env.example` to `.env`:
 4. [Create an access token](https://github.com/settings/tokens) and save the variable as `GITHUB_TOKEN` in `.env`
+5. Add the webhook to your repo, making sure your `GIT_HOOK_SECRET` (in `.env`) is the same as the secret of your private repo.
 
 ## Usage
 ### Start
@@ -36,5 +37,5 @@ server {
 `forever stop index.js`
 
 ## Todo:
-- fix builder.pull function with credentials
+- nginx test
 - do something with permissions, so repositories can only read/write in their own repo (for gulp/npm postinstall scripts etc)
