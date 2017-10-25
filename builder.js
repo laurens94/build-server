@@ -274,9 +274,9 @@ var builder = {
 
     checks: [
         {
-            'name': 'npm',
+            'name': 'yarn',
             'filename': 'package.json',
-            'exec': 'npm install',
+            'exec': 'yarn',
             'successMessage': 'Done installing packages.',
             'killable': false
         },
