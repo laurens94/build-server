@@ -262,9 +262,6 @@ var builder = {
                     }
                 });
 
-                logger.log('Done with executing ' + params.check.name,
-                    'yellow');
-
             }
             else {
                 return new Promise(function(resolve, reject) {
