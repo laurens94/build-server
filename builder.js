@@ -3,8 +3,8 @@ var fs = require('fs'),
     logger = require('./logger'),
     async = require('async'),
     exec = require('child_process').exec,
-    Git = require("nodegit"),
-    path = require("path"),
+    Git = require('nodegit'),
+    path = require('path'),
     ncp = require('ncp').ncp,
     rimraf = require('rimraf'),
     cred = Git.Cred;
@@ -21,12 +21,13 @@ var builderDomain = process.env.BUILDER_DOMAIN;
 
 var builder = {
 
-    current: function () {
+    current: function() {
         return currentCommit;
     },
 
-    cancel: function (commit) {
-        if (currentCommit && commit.repo_name == currentCommit.repo_name && commit.branch == currentCommit.branch) {
+    cancel: function(commit) {
+        if (currentCommit && commit.repo_name == currentCommit.repo_name &&
+            commit.branch == currentCommit.branch) {
 
             if (currentCheck && currentCheck.killable) {
                 currentTerminalCommand.kill('SIGINT');
@@ -34,31 +35,34 @@ var builder = {
                 logger.log('Killed ' + commit.message, 'red');
             }
             else {
-                logger.log('Canceled ' + commit.message + ', but had a non killable task, will terminate the build when possible', 'red');
+                logger.log('Canceled ' + commit.message +
+                    ', but had a non killable task, will terminate the build when possible',
+                    'red');
             }
 
             mustKillNextCheck = true;
         }
     },
 
-    getSourcePath: function (commit) {
+    getSourcePath: function(commit) {
         return __dirname + '/builds/' + commit.repo_name + '_' + commit.branch;
     },
 
-    getBuildPath: function (commit) {
-        return '/var/www/' + commit.repo_name + '/' + commit.branch + '_' + commit.timestamp;
+    getBuildPath: function(commit) {
+        return '/var/www/' + commit.repo_name + '/' + commit.branch + '_' +
+            commit.timestamp;
     },
 
-    getBuildsPath: function (commit) {
+    getBuildsPath: function(commit) {
         return '/var/www/' + commit.repo_name;
     },
 
-    getVhostPath: function (commit) {
+    getVhostPath: function(commit) {
         return '/var/www/vhosts/' + commit.branch + '_' + commit.repo_name;
     },
 
     build: {
-        init: function (commit) {
+        init: function(commit) {
             logger.log('Running builder.build.init', 'white');
             mustKillNextCheck = false;
 
@@ -70,59 +74,81 @@ var builder = {
                 builder.build.clone(commit);
             }
             else {
-                // Remove folder then clone:
-                rmdirAsync(folderToBuild, function () {
-                    console.log('Removed old build: ' + folderToBuild);
-                    builder.build.clone(commit);
-                });
+                builder.build.pull(commit);
             }
         },
 
-        clone: function (commit) {
+        clone: function(commit) {
 
             logger.log('Cloning commit:', 'green');
             logger.log(commit.repo, 'rainbow');
 
             // Check if we have a builds folder.
-            mkdirp(__dirname + '/builds', function (err) {
+            mkdirp(__dirname + '/builds', function(err) {
                 logger.log('Ensured a builds folder', 'green');
 
                 var cloneOptions = {
-                    checkoutBranch: commit.branch
+                    checkoutBranch: commit.branch,
                 };
 
                 cloneOptions.fetchOpts = {
                     callbacks: {
-                        certificateCheck: function () {
+                        certificateCheck: function() {
                             return 1;
                         },
-                        credentials: function () {
-                            return Git.Cred.userpassPlaintextNew(process.env.GITHUB_TOKEN, "x-oauth-basic");
-                        }
-                    }
+                        credentials: function() {
+                            return Git.Cred.userpassPlaintextNew(
+                                process.env.GITHUB_TOKEN, 'x-oauth-basic');
+                        },
+                    },
                 };
 
-                var errorAndAttemptOpen = function () {
+                var errorAndAttemptOpen = function() {
                     return Git.Repository.open(builder.getSourcePath(commit));
                 };
 
-                var cloneRepo = Git.Clone(commit.repo, builder.getSourcePath(commit), cloneOptions);
-                cloneRepo.catch(errorAndAttemptOpen)
-                    .then(function (repository) {
-                        logger.log('Cloned repo: ' + commit.repo_name, 'yellow');
-                        builder.build.runChecks(commit);
-                    });
+                var cloneRepo = Git.Clone(commit.repo,
+                    builder.getSourcePath(commit), cloneOptions);
+                cloneRepo.catch(errorAndAttemptOpen).then(function(repository) {
+                    logger.log('Cloned repo: ' + commit.repo_name, 'yellow');
+                    builder.build.pull(commit);
+                });
             });
         },
 
-        garbageCollector: function (commit) {
+        pull: function(commit) {
+            logger.log('Trying to pull', 'white');
+
+            try {
+                Git.Repository.open(builder.getSourcePath(commit)).
+                    then(function(repo) {
+                        logger.log('Trying to pull - 2', 'white');
+
+                        repo.fetchAll().then(function() {
+                            logger.log('Trying to pull - 3', 'white');
+                            repo.mergeBranches(commit.branch, 'origin/' +
+                                commit.branch);
+                            logger.log('Pulled on repo: ' + commit.repo_name,
+                                'yellow');
+                            builder.build.runChecks(commit);
+                        });
+                    });
+            }
+            catch (error) {
+                console.log(error);
+            }
+        },
+
+        garbageCollector: function(commit) {
             var folder = '/var/www/' + commit.repo_name;
             var oldBuilds = [];
 
-            fs.readdir(folder, function (err, items) {
+            fs.readdir(folder, function(err, items) {
                 for (var i = 0; i < items.length; i++) {
 
-                    if (items[i].substr(0, commit.branch.length) == commit.branch && commit.branch + '_' + commit.timestamp != items[i]) {
+                    if (items[i].substr(0, commit.branch.length) ==
+                        commit.branch &&
+                        commit.branch + '_' + commit.timestamp != items[i]) {
                         oldBuilds.push(items[i]);
                     }
                 }
@@ -136,43 +162,48 @@ var builder = {
                 // The number is the threshold of builds we keep to roll back.
                 var buildsToRemove = oldBuilds.slice(2);
 
-                buildsToRemove.forEach(function (oldBuildFolderName) {
-                    rmdirAsync(folder + '/' + oldBuildFolderName, function () {
-                        console.log('Removed old build: ' + folder + '/' + oldBuildFolderName);
+                buildsToRemove.forEach(function(oldBuildFolderName) {
+                    rmdirAsync(folder + '/' + oldBuildFolderName, function() {
+                        console.log('Removed old build: ' + folder + '/' +
+                            oldBuildFolderName);
                     });
                 });
             });
         },
 
-        runChecks: function (commit) {
+        runChecks: function(commit) {
             var checkPromises = [];
-            builder.checks.forEach(function (check) {
-                checkPromises.push(async.asyncify(function () {
-                    return builder.build.runCheck({commit: commit, check: check});
+            builder.checks.forEach(function(check) {
+                checkPromises.push(async.asyncify(function() {
+                    return builder.build.runCheck(
+                        {commit: commit, check: check});
                 }));
             });
 
-            async.waterfall(checkPromises, function (err, results) {
+            async.waterfall(checkPromises, function(err, results) {
                 currentCommit = null;
                 currentCheck = null;
-            })
+            });
         },
 
-        runCheck: function (params) {
+        runCheck: function(params) {
             var commit = params.commit;
             currentCheck = params.check;
 
-            if (fs.existsSync(builder.getSourcePath(commit) + '/' + currentCheck.filename)) {
-                logger.log('Check ' + currentCheck.filename + ' was found', 'yellow');
+            if (fs.existsSync(builder.getSourcePath(commit) + '/' +
+                    currentCheck.filename)) {
+                logger.log('Check ' + currentCheck.filename + ' was found',
+                    'yellow');
 
                 if (mustKillNextCheck) {
                     mustKillNextCheck = false;
-                    reject(Error("Canceled..."));
+                    reject(Error('Canceled...'));
                 }
 
-                logger.log('Starting with executing ' + params.check.name, 'yellow');
+                logger.log('Starting with executing ' + params.check.name,
+                    'yellow');
 
-                return new Promise(function (resolve, reject) {
+                return new Promise(function(resolve, reject) {
                     var execCommand = '';
 
                     if (typeof params.check.exec == 'function') {
@@ -186,108 +217,116 @@ var builder = {
                         currentTerminalCommand = exec(execCommand, {
                             cwd: builder.getSourcePath(params.commit),
                             shell: '/bin/bash',
-                            maxBuffer: 1000 * 1024
-                        }, function (error, stdout, stderr) {
+                            maxBuffer: 1000 * 1024,
+                        }, function(error, stdout, stderr) {
 
                             logger.log(params.check.successMessage, 'yellow');
 
                             if (stdout) {
-                                logger.log("stdout:\n\n" + stdout + "\n\n", 'yellow');
+                                logger.log('stdout:\n\n' + stdout + '\n\n',
+                                    'yellow');
                             }
 
                             if (stderr) {
-                                logger.log("stderr:\n\n" + stderr, 'yellow');
+                                logger.log('stderr:\n\n' + stderr, 'yellow');
                             }
 
                             if (error) {
-                                logger.log("error:\n\n" + error, 'yellow');
+                                logger.log('error:\n\n' + error, 'yellow');
                             }
 
-                            if (params.check.post && typeof params.check.post == 'function') {
+                            if (params.check.post &&
+                                typeof params.check.post == 'function') {
                                 params.check.post(params);
                             }
 
                             resolve(params.check.successMessage);
                         });
                     }
-                    else if (params.check.command && typeof params.check.command == 'function') {
+                    else if (params.check.command &&
+                        typeof params.check.command == 'function') {
                         var result = params.check.command(params);
                         resolve(result);
                     }
                     else {
-                        reject(Error("Broken..."));
+                        reject(Error('Broken...'));
                     }
                 });
             }
             else {
-                return new Promise(function (resolve, reject) {
-                    logger.log('Check ' + currentCheck.name + ' was not successful', 'yellow');
+                return new Promise(function(resolve, reject) {
+                    logger.log('Check ' + currentCheck.name +
+                        ' was not successful', 'yellow');
                     resolve(true);
-                })
+                });
             }
-        }
+        },
     },
 
     checks: [
         {
-            "name": "npm",
-            "filename": "package.json",
-            "exec": "npm install",
-            "successMessage": "Done installing packages.",
-            "killable": false
+            'name': 'npm',
+            'filename': 'package.json',
+            'exec': 'npm install',
+            'successMessage': 'Done installing packages.',
+            'killable': false,
         },
 
         {
-            "name": "bundler",
-            "filename": "Gemfile",
-            "exec": "bundle install",
-            "successMessage": "Done installing gems.",
-            "killable": false
+            'name': 'bundler',
+            'filename': 'Gemfile',
+            'exec': 'bundle install',
+            'successMessage': 'Done installing gems.',
+            'killable': false,
         },
 
         {
-            "name": "bower",
-            "filename": "bower.json",
-            "exec": "bower install --allow-root",
-            "successMessage": "Done installing bower dependencies.",
-            "killable": false
+            'name': 'bower',
+            'filename': 'bower.json',
+            'exec': 'bower install --allow-root',
+            'successMessage': 'Done installing bower dependencies.',
+            'killable': false,
         },
 
         {
-            "name": "grunt",
-            "filename": "Gruntfile.js",
-            "exec": "grunt build",
-            "successMessage": "Succesfully deployed project.",
-            "killable": true
+            'name': 'grunt',
+            'filename': 'Gruntfile.js',
+            'exec': 'grunt build',
+            'successMessage': 'Succesfully deployed project.',
+            'killable': true,
         },
 
         {
-            "name": "gulp",
-            "filename": "gulpfile.js",
-            "exec": "gulp build",
-            "successMessage": "Succesfully deployed project.",
-            "killable": true
+            'name': 'gulp',
+            'filename': 'gulpfile.js',
+            'exec': 'gulp build',
+            'successMessage': 'Succesfully deployed project.',
+            'killable': true,
         },
 
         {
-            "name": "vhost replacement",
-            "filename": "vhost",
-            "command": function (params) {
+            'name': 'vhost replacement',
+            'filename': 'vhost',
+            'command': function(params) {
                 if (fs.existsSync(builder.getVhostPath(params.commit))) {
                     fs.unlinkSync(builder.getVhostPath(params.commit));
                 }
 
-                var cname = fs.readFileSync(builder.getSourcePath(params.commit) + '/CNAME').toString().trim();
-                var vhost = fs.readFileSync(builder.getSourcePath(params.commit) + '/vhost').toString().trim();
+                var cname = fs.readFileSync(builder.getSourcePath(
+                    params.commit) + '/CNAME').toString().trim();
+                var vhost = fs.readFileSync(builder.getSourcePath(
+                    params.commit) + '/vhost').toString().trim();
 
-                vhost = vhost.replace('[REPLACE_WITH_BUILD_PATH]', builder.getBuildPath(params.commit));
+                vhost = vhost.replace('[REPLACE_WITH_BUILD_PATH]',
+                    builder.getBuildPath(params.commit));
 
                 if (params.commit.branch && params.commit.branch != 'master') {
                     cname = params.commit.branch + '.' + cname;
                 }
 
                 vhost = vhost.replace(/\[REPLACE_WITH_CNAME\]/g, cname);
-                vhost = vhost.replace(/\[REPLACE_WITH_ALIAS\]/g, cname + '.' + builderDomain);
+                vhost = vhost.replace(/\[REPLACE_WITH_ALIAS\]/g, cname + '.' +
+                    builderDomain);
 
                 try {
                     fs.writeFile(builder.getVhostPath(params.commit), vhost);
@@ -299,49 +338,52 @@ var builder = {
 
                 return 'done';
             },
-            "successMessage": "Succesfully replaced the vhost.",
-            "killable": false
+            'successMessage': 'Succesfully replaced the vhost.',
+            'killable': false,
         },
 
         {
-            "name": "build folder copy",
-            "filename": "vhost",
-            "command": function (params) {
-                mkdirp(builder.getBuildsPath(params.commit), function (err) {
-                    logger.log('Ensured ' + builder.getBuildsPath(params.commit) + ' folder', 'green');
+            'name': 'build folder copy',
+            'filename': 'vhost',
+            'command': function(params) {
+                mkdirp(builder.getBuildsPath(params.commit), function(err) {
+                    logger.log('Ensured ' +
+                        builder.getBuildsPath(params.commit) + ' folder',
+                        'green');
 
                     if (params.commit.repo_name && params.commit.timestamp) {
                         rimraf.sync(builder.getBuildPath(params.commit));
                     }
 
-                    ncp(builder.getSourcePath(params.commit) + '/dist', builder.getBuildPath(params.commit), function (err) {
-                        if (err) {
-                            console.log(err);
-                        }
-                        else {
-                            builder.build.garbageCollector(params.commit);
-                        }
-                    });
+                    ncp(builder.getSourcePath(params.commit) + '/dist',
+                        builder.getBuildPath(params.commit), function(err) {
+                            if (err) {
+                                console.log(err);
+                            }
+                            else {
+                                builder.build.garbageCollector(params.commit);
+                            }
+                        });
                 });
 
                 return 'build folder copy';
             },
-            "successMessage": "Succesfully copied build.",
-            "killable": false
+            'successMessage': 'Succesfully copied build.',
+            'killable': false,
         },
 
         {
-            "name": "nginx reload",
-            "filename": "vhost",
-            "exec": "sudo /usr/sbin/service nginx restart",
-            "successMessage": "Reloaded nginx.",
-            "killable": false
-        }
-    ]
+            'name': 'nginx reload',
+            'filename': 'vhost',
+            'exec': 'sudo /usr/sbin/service nginx restart',
+            'successMessage': 'Reloaded nginx.',
+            'killable': false,
+        },
+    ],
 };
 
-var rmdirAsync = function (path, callback) {
-    fs.readdir(path, function (err, files) {
+var rmdirAsync = function(path, callback) {
+    fs.readdir(path, function(err, files) {
         if (err) {
             // Pass the error on to callback
             callback(err, []);
@@ -349,7 +391,7 @@ var rmdirAsync = function (path, callback) {
         }
         var wait = files.length,
             count = 0,
-            folderDone = function (err) {
+            folderDone = function(err) {
                 count++;
                 // If we cleaned out all the files, continue
                 if (count >= wait || err) {
@@ -363,17 +405,18 @@ var rmdirAsync = function (path, callback) {
         }
 
         // Remove one or more trailing slash to keep from doubling up
-        path = path.replace(/\/+$/, "");
-        files.forEach(function (file) {
-            var curPath = path + "/" + file;
-            fs.lstat(curPath, function (err, stats) {
+        path = path.replace(/\/+$/, '');
+        files.forEach(function(file) {
+            var curPath = path + '/' + file;
+            fs.lstat(curPath, function(err, stats) {
                 if (err) {
                     callback(err, []);
                     return;
                 }
                 if (stats.isDirectory()) {
                     rmdirAsync(curPath, folderDone);
-                } else {
+                }
+                else {
                     fs.unlink(curPath, folderDone);
                 }
             });
