@@ -1,6 +1,7 @@
 module.exports = {
-    parseGithub: function (request) {
-        if (request.body.ref && request.body.head_commit && request.body.head_commit.timestamp) {
+    parseGithub: function(request) {
+        if (request.body.ref && request.body.head_commit &&
+            request.body.head_commit.timestamp) {
             var ref_splitted = request.body.ref.split('/');
 
             return {
@@ -10,7 +11,7 @@ module.exports = {
                 message: request.body.head_commit.message,
                 email: request.body.pusher.email,
                 repo_name: request.body.repository.name
-            }
+            };
         }
-    },
+    }
 };
