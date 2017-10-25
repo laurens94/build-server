@@ -117,12 +117,9 @@ var builder = {
         },
 
         pull: function(commit) {
-            logger.log('Trying to pull', 'white');
-
             try {
                 Git.Repository.open(builder.getSourcePath(commit)).
                     then(function(repo) {
-                        logger.log('Trying to pull - 2', 'white');
 
                         var fetchOptions = {
                             callbacks: {
@@ -138,7 +135,6 @@ var builder = {
                         };
 
                         repo.fetchAll(fetchOptions).then(function() {
-                            logger.log('Trying to pull - 3', 'white');
                             repo.mergeBranches(commit.branch, 'origin/' +
                                 commit.branch);
                             logger.log('Pulled on repo: ' + commit.repo_name,
