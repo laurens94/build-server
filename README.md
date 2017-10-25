@@ -1,8 +1,24 @@
 # Build server
 
 ## Prerequisites
-- nginx (with `include /var/www/vhosts/*;` in config)
 - node with npm
+- nginx (with `include /var/www/vhosts/*;` in config)
+
+### Nginx server for nodejs
+```
+upstream build-server {
+  server 127.0.0.1:3000;
+}
+
+server {
+  listen 80;
+  server_name your.domain.here;
+
+  location / {
+    proxy_pass http://build-server;
+  }
+}
+```
 
 ## Installation
 1. Run `sudo visudo` and add the following line *(replace `thisuser` with an existing user)*:  
