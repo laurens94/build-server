@@ -185,7 +185,7 @@ var builder = {
             builder.checks.forEach(function(check) {
                 checkPromises.push(async.asyncify(function() {
                     return builder.build.runCheck(
-                        {commit: commit, check: check});
+                        { commit: commit, check: check });
                 }));
             });
 

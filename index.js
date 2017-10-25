@@ -51,15 +51,15 @@ function verifyRequest (req, res, buf, encoding) {
 function abortOnError (err, req, res, next) {
     if (err) {
         console.log(err);
-        res.status(400).send({error: 'Invalid signature.'});
+        res.status(400).send({ error: 'Invalid signature.' });
     }
     else {
         next();
     }
 }
 
-app.use(bodyParser.urlencoded({extended: false}));
-app.use(bodyParser.json({verify: verifyRequest}));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json({ verify: verifyRequest }));
 
 // Add an error-handling Express middleware function
 // to prevent returning sensitive information.
