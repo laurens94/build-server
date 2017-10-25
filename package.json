@@ -1,7 +1,7 @@
 {
     "name": "git-hook-fonkel",
     "description": "Using Git hook",
-    "version": "0.3.0",
+    "version": "0.5.0",
     "scripts": {
         "postinstall": "touch .env"
     },
