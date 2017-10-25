@@ -10,6 +10,7 @@
 2. `yarn` or `npm install`
 3. Copy and edit contents of `.env.example` to `.env`:
 4. [Create an access token](https://github.com/settings/tokens) and save the variable as `GITHUB_TOKEN` in `.env`
+5. Add the webhook to your repo, making sure your `GIT_HOOK_SECRET` (in `.env`) is the same as the secret of your private repo.
 
 ## Usage
 ### Start
