@@ -181,6 +181,7 @@ var builder = {
         },
 
         runChecks: function(commit) {
+            console.log('Starting checks');
             var checkPromises = [];
             builder.checks.forEach(function(check) {
                 checkPromises.push(async.asyncify(function() {
@@ -188,6 +189,8 @@ var builder = {
                         { commit: commit, check: check });
                 }));
             });
+
+            console.log('Checks done?');
 
             async.waterfall(checkPromises, function(err, results) {
                 currentCommit = null;
